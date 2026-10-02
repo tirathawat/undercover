@@ -1,0 +1,88 @@
+.room-navigation {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--md-sys-color-surface-container);
+  padding: var(--md-sys-space-2) var(--md-sys-space-3)
+    calc(var(--md-sys-space-2) + env(safe-area-inset-bottom));
+  z-index: 5;
+  box-shadow: 0 -2px 12px #1d1b2008;
+}
+.room-navigation > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--md-sys-space-1);
+  border: 0;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-label-medium-size);
+  font-weight: 500;
+  min-height: 64px;
+  padding: var(--md-sys-space-1);
+  border-radius: 16px;
+}
+.nav-icon {
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 64px;
+  height: 32px;
+  border-radius: var(--md-sys-shape-corner-full);
+}
+.room-navigation > button[aria-current='page'] {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+.room-navigation > button[aria-current='page'] .nav-icon {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+.nav-badge {
+  position: absolute;
+  inset-block-start: -4px;
+  inset-inline-end: 4px;
+  min-width: 18px;
+  padding-inline: var(--md-sys-space-1);
+  border-radius: var(--md-sys-shape-corner-full);
+  font-size: 11px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.error-banner,
+.offline-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--md-sys-space-3);
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  padding: var(--md-sys-space-3) var(--md-sys-space-4);
+  border-radius: var(--md-sys-shape-corner-medium);
+  margin-block: var(--md-sys-space-3) var(--md-sys-space-5);
+  font-size: var(--md-sys-typescale-body-medium-size);
+}
+.error-banner .icon-button {
+  color: inherit;
+}
+.offline-banner {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+.restoring-state {
+  min-height: 60dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--md-sys-space-3);
+  text-align: center;
+}
+.restoring-state h1 {
+  font-size: var(--md-sys-typescale-headline-small-size);
+}
+.restoring-state p {
+  color: var(--md-sys-color-on-surface-variant);
+}

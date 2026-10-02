@@ -1,0 +1,61 @@
+.modal {
+  border: 0;
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  width: min(520px, calc(100% - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: var(--md-sys-space-8) var(--md-sys-space-6) var(--md-sys-space-6);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.modal::backdrop {
+  background: #1d1b2066;
+}
+.modal-close {
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+}
+.modal h2 {
+  font-size: var(--md-sys-typescale-headline-small-size);
+  margin-block: var(--md-sys-space-5) var(--md-sys-space-5);
+  line-height: 1.4;
+  padding-inline-end: var(--md-sys-space-4);
+  overflow-wrap: anywhere;
+}
+.modal > .button {
+  width: 100%;
+}
+.rules-list {
+  margin: 0 0 var(--md-sys-space-6);
+  padding-inline-start: var(--md-sys-space-6);
+}
+.rules-list li {
+  margin-block-end: var(--md-sys-space-5);
+  padding-inline-start: var(--md-sys-space-1);
+}
+.rules-list strong {
+  font-size: 16px;
+  font-weight: 500;
+}
+.rules-list p,
+.rules-note,
+.leave-description {
+  font-size: var(--md-sys-typescale-body-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.75;
+}
+.rules-list p {
+  margin-block-start: var(--md-sys-space-1);
+}
+.rules-note {
+  margin-block-end: var(--md-sys-space-6);
+}
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--md-sys-space-3);
+  margin-block-start: var(--md-sys-space-6);
+}

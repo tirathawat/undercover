@@ -1,0 +1,87 @@
+.button,
+.text-link,
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--md-sys-space-2);
+  min-height: var(--md-sys-control-height);
+  border: 0;
+  border-radius: var(--md-sys-shape-corner-full);
+  padding: var(--md-sys-space-3) var(--md-sys-space-6);
+  font-weight: 500;
+  font-size: var(--md-sys-typescale-label-large-size);
+  text-decoration: none;
+}
+.button.primary {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.button.secondary {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+.button.danger {
+  background: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+}
+.button:disabled {
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-on-surface) 12%,
+    transparent
+  );
+  color: color-mix(
+    in srgb,
+    var(--md-sys-color-on-surface) 45%,
+    var(--md-sys-color-surface)
+  );
+}
+.text-link,
+.icon-button {
+  background: transparent;
+  color: var(--md-sys-color-primary);
+}
+.text-link {
+  padding-inline: var(--md-sys-space-3);
+}
+.icon-button {
+  width: var(--md-sys-control-size-icon);
+  flex-shrink: 0;
+  padding: var(--md-sys-space-3);
+}
+.text-link:disabled,
+.icon-button:disabled {
+  opacity: 0.45;
+}
+@media (hover: hover) {
+  .button.primary:hover:not(:disabled) {
+    background: color-mix(
+      in srgb,
+      var(--md-sys-color-on-primary) 8%,
+      var(--md-sys-color-primary)
+    );
+  }
+  .button.secondary:hover:not(:disabled),
+  .text-link:hover:not(:disabled),
+  .icon-button:hover:not(:disabled) {
+    background: color-mix(
+      in srgb,
+      var(--md-sys-color-primary) 8%,
+      var(--md-sys-color-secondary-container)
+    );
+  }
+  .button.danger:hover:not(:disabled) {
+    background: color-mix(
+      in srgb,
+      var(--md-sys-color-on-error) 8%,
+      var(--md-sys-color-error)
+    );
+  }
+}
+.field-label {
+  display: block;
+  font-size: var(--md-sys-typescale-body-medium-size);
+  font-weight: 500;
+  margin-block-end: var(--md-sys-space-2);
+}

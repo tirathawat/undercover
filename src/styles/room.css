@@ -1,0 +1,87 @@
+.room-page {
+  padding-block: var(--md-sys-space-2) calc(112px + env(safe-area-inset-bottom));
+}
+.room-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--md-sys-space-3);
+  margin-block-end: var(--md-sys-space-5);
+}
+.room-page-heading h1 {
+  font-size: var(--md-sys-typescale-headline-medium-size);
+  line-height: 1.4;
+}
+.room-page-heading p {
+  font-size: var(--md-sys-typescale-body-small-size);
+  color: var(--md-sys-color-on-surface-variant);
+  margin-block-start: 2px;
+}
+.phase-pill {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  padding: 6px var(--md-sys-space-3);
+  border-radius: var(--md-sys-shape-corner-small);
+  font-size: var(--md-sys-typescale-body-small-size);
+  white-space: nowrap;
+}
+.share-bar {
+  display: flex;
+  gap: var(--md-sys-space-3);
+  justify-content: space-between;
+  align-items: center;
+  margin-block-end: var(--md-sys-space-6);
+}
+.share-code {
+  display: flex;
+  flex-direction: column;
+}
+.share-code span {
+  font-size: var(--md-sys-typescale-label-medium-size);
+  color: var(--md-sys-color-on-surface-variant);
+}
+.share-code strong {
+  font-family: var(--md-ref-typeface-brand);
+  font-size: var(--md-sys-typescale-headline-small-size);
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+}
+.share-bar .button {
+  padding-inline: var(--md-sys-space-4);
+}
+.copy-fallback {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--md-sys-space-2);
+  margin-block-end: var(--md-sys-space-6);
+}
+.share-status:not(:empty),
+.request-status:not(:empty) {
+  grid-column: 1 / -1;
+  margin-block-end: var(--md-sys-space-4);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-medium-size);
+}
+.copy-fallback label {
+  grid-column: 1 / -1;
+  font-size: var(--md-sys-typescale-body-medium-size);
+}
+.copy-fallback input {
+  min-width: 0;
+}
+.room-layout > div {
+  min-width: 0;
+}
+.room-layout .play-view,
+.room-layout .history-view,
+.room-layout .people-view {
+  display: none;
+}
+.room-layout.view-play .play-view,
+.room-layout.view-history .history-view,
+.room-layout.view-people .people-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-4);
+}

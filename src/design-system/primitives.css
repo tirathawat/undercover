@@ -1,0 +1,84 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button:disabled {
+  cursor: default;
+}
+button,
+input,
+select {
+  color: inherit;
+}
+button {
+  text-wrap: pretty;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+svg {
+  flex-shrink: 0;
+}
+a {
+  color: var(--md-sys-color-primary);
+  text-underline-offset: 0.2em;
+}
+::selection {
+  color: var(--md-sys-color-on-primary-container);
+  background: var(--md-sys-color-primary-container);
+}
+:focus-visible {
+  outline: 3px solid var(--md-sys-color-primary);
+  outline-offset: 3px;
+}
+input,
+select {
+  width: 100%;
+  min-height: var(--md-sys-control-height-field);
+  padding: var(--md-sys-space-3) var(--md-sys-space-4);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 4px;
+  background: transparent;
+  font-size: var(--md-sys-typescale-body-large-size);
+  caret-color: var(--md-sys-color-primary);
+}
+input::placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.85;
+}
+input:disabled {
+  opacity: 0.5;
+}
+.segmented-control button:disabled,
+.avatar-picker button:disabled {
+  opacity: 0.5;
+}
+input:focus-visible,
+select:focus-visible {
+  outline-offset: 0;
+  outline-width: 2px;
+}

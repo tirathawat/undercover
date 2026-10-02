@@ -1,0 +1,58 @@
+import { Trophy } from 'lucide-react';
+import { Button } from '../../../design-system/Button';
+import { useTranslation } from '../../../i18n';
+import type { StageProps } from './stage-props';
+import { VoteCounts } from './ResultStage';
+
+export function FinishedStage({ room, disabled, send }: StageProps) {
+  const { t } = useTranslation();
+  const eliminated = room.players.find(
+    (player) => player.id === room.result?.eliminatedId,
+  );
+  const isHost = room.hostId === room.self.id;
+  return (
+    <section className="stage-panel finished-stage">
+      <span className="stage-symbol">
+        <Trophy size={40} strokeWidth={1.5} aria-hidden="true" />
+      </span>
+      <h2 tabIndex={-1}>
+        {room.winner === 'civilian'
+          ? t('finished.civilianWin')
+          : t('finished.undercoverWin')}
+      </h2>
+      <p>
+        {room.winner === 'civilian'
+          ? t('finished.civilianDescription')
+          : t('finished.undercoverDescription')}
+      </p>
+      <div className="word-reveal">
+        <div>
+          <span>{t('finished.civilianWord')}</span>
+          <strong>{room.words?.civilian}</strong>
+        </div>
+        <div>
+          <span>{t('finished.undercoverWord')}</span>
+          <strong>{room.words?.undercover}</strong>
+        </div>
+      </div>
+      {eliminated && (
+        <p className="last-eliminated">
+          {t('finished.lastEliminated', { name: eliminated.name })}
+        </p>
+      )}
+      <VoteCounts room={room} />
+      {isHost ? (
+        <Button
+          variant="primary"
+          disabled={disabled}
+          onClick={() => send({ type: 'rematch', stageId: room.stageId })}
+        >
+          {t('finished.rematch')}
+        </Button>
+      ) : (
+        <span className="waiting-label">{t('finished.waiting')}</span>
+      )}
+      <span className="stage-footnote">{t('finished.historyNote')}</span>
+    </section>
+  );
+}
