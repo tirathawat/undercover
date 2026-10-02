@@ -7,7 +7,7 @@ COPY src ./src
 COPY shared ./shared
 RUN npm run build
 
-FROM golang:1.26.4-alpine AS backend
+FROM golang:1.27.1-alpine AS backend
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
