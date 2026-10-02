@@ -192,6 +192,31 @@ test('starting requires a connected civilian majority and host permission', () =
   expect(screen.queryByRole('button', { name: 'เริ่มเกม' })).toBeNull();
 });
 
+test.each([
+  { undercovers: 1, whiteGuys: 0, minimum: 3, usesDefaultCopy: true },
+  { undercovers: 2, whiteGuys: 0, minimum: 5, usesDefaultCopy: false },
+  { undercovers: 3, whiteGuys: 0, minimum: 7, usesDefaultCopy: false },
+  { undercovers: 1, whiteGuys: 1, minimum: 5, usesDefaultCopy: false },
+  { undercovers: 2, whiteGuys: 1, minimum: 7, usesDefaultCopy: false },
+  { undercovers: 3, whiteGuys: 1, minimum: 9, usesDefaultCopy: false },
+])(
+  'lobby shows the $minimum-player minimum for $undercovers Undercover and $whiteGuys White Guy',
+  ({ undercovers, whiteGuys, minimum, usesDefaultCopy }) => {
+    const current = room({
+      settings: { category: 'food', undercovers, whiteGuys },
+    });
+    render(<Stage room={current} disabled={false} send={vi.fn()} />);
+
+    expect(
+      screen.getByText(
+        usesDefaultCopy
+          ? `${current.players.length} คนในห้อง · เล่นได้ตั้งแต่ 3 คน`
+          : `${current.players.length} คนในห้อง · เกมนี้เริ่มได้ตั้งแต่ ${minimum} คน`,
+      ),
+    ).toBeTruthy();
+  },
+);
+
 test('a failed clue retains its draft and a successful retry clears it', async () => {
   const send = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
   const current = room({ phase: 'clue', game: 1, round: 1, speakerId: 'a' });
@@ -719,14 +744,35 @@ test('host can remove a disconnected White Guy guesser after elimination', () =>
     settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
     players: room().players.map((player) => ({
       ...player,
-      alive: player.id !== 'b',
-      connected: player.id !== 'b',
+      alive: player.id === 'a',
+      connected: player.id === 'a',
       role: player.id === 'b' ? 'whiteGuy' : undefined,
     })),
+    result: {
+      eliminatedId: 'b',
+      role: 'whiteGuy',
+      counts: { b: 2 },
+      tiedIds: [],
+    },
   });
   render(<People room={current} disabled={false} send={vi.fn()} />);
 
   expect(screen.getByRole('button', { name: 'นำ b ออก' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'นำ c ออก' })).toBeNull();
+});
+
+test('dead disconnected players remain in ordinary game results', () => {
+  const current = room({
+    phase: 'result',
+    players: room().players.map((player) => ({
+      ...player,
+      alive: player.id !== 'b',
+      connected: player.id !== 'b',
+    })),
+  });
+  render(<People room={current} disabled={false} send={vi.fn()} />);
+
+  expect(screen.queryByRole('button', { name: 'นำ b ออก' })).toBeNull();
 });
 
 test('White Guy roles and final guesses are shown in public results', () => {

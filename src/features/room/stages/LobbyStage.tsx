@@ -37,7 +37,7 @@ export function LobbyStage({ room, disabled, send }: StageProps) {
         ))}
       </div>
       <span className="stage-footnote">
-        {room.settings.whiteGuys
+        {requiredPlayers > 3
           ? t('lobby.playerCountWithMinimum', {
               count: room.players.length,
               minimum: requiredPlayers,

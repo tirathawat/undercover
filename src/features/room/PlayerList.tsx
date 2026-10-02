@@ -66,7 +66,11 @@ export function PlayerList({ room, disabled, heading, onRemove }: Props) {
             </div>
             {isHost &&
               player.id !== room.self.id &&
-              (room.phase === 'lobby' || !player.connected) && (
+              (room.phase === 'lobby' ||
+                (!player.connected &&
+                  (player.alive ||
+                    (room.phase === 'guess' &&
+                      room.result?.eliminatedId === player.id)))) && (
                 <IconButton
                   className="remove-player"
                   aria-label={t('players.remove', { name: player.name })}
