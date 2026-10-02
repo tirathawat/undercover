@@ -16,7 +16,7 @@ The initial `v1.0.0` identifies commit `394eb5e7276e42b699252a3ccc91d32c7b165572
 
 ## CI
 
-[GitHub Actions](../.github/workflows/ci.yml) checks pull requests, pushes to `main`, and version tags. It runs the existing client, UI, and Go race tests; lint and Go vet; formatting; frontend and server builds; and a Docker build with HTTP smoke checks. Release tags also validate the version and that their commit belongs to `main` before publishing a GitHub release.
+[GitHub Actions](../.github/workflows/ci.yml) checks pull requests, pushes to `main`, and version tags. It runs the existing client, UI, and Go race tests; lint and Go vet; formatting; frontend and server builds; and a Docker build with HTTP smoke checks. Compatibility jobs repeat tests, lint, and builds on the minimum supported Node 22.22.2 and 24.15.0 versions required by branch protection. Release tags also validate the version and that their commit belongs to `main` before publishing a GitHub release after all checks pass.
 
 Actions have read access by default. Only the release job has permission to publish repository content. Third-party actions are pinned to commit SHAs, and [Dependabot](../.github/dependabot.yml) proposes dependency and action updates through pull requests.
 
