@@ -37,7 +37,7 @@ function isMessageMetadata(value: Record<string, unknown>): boolean {
 }
 
 function isRole(value: unknown) {
-  return value === 'civilian' || value === 'undercover';
+  return value === 'civilian' || value === 'undercover' || value === 'whiteGuy';
 }
 
 export function isSession(value: unknown): value is Session {
@@ -53,7 +53,8 @@ function isSettings(value: unknown): value is Settings {
   return (
     isRecord(value) &&
     categories.some((category) => category.value === value.category) &&
-    Number.isInteger(value.undercovers)
+    Number.isInteger(value.undercovers) &&
+    (value.whiteGuys === 0 || value.whiteGuys === 1)
   );
 }
 
@@ -93,7 +94,11 @@ function isVoteResult(value: unknown): value is VoteResult {
     isRecord(value.counts) &&
     Object.values(value.counts).every(Number.isInteger) &&
     Array.isArray(value.tiedIds) &&
-    value.tiedIds.every((id) => typeof id === 'string')
+    value.tiedIds.every((id) => typeof id === 'string') &&
+    (value.guess === undefined ||
+      (isRecord(value.guess) &&
+        typeof value.guess.text === 'string' &&
+        typeof value.guess.correct === 'boolean'))
   );
 }
 
@@ -105,7 +110,7 @@ function isRoomView(value: unknown): value is RoomView {
     typeof value.hostId === 'string' &&
     typeof value.stageId === 'string' &&
     typeof value.phase === 'string' &&
-    ['lobby', 'reveal', 'clue', 'vote', 'result', 'finished'].includes(
+    ['lobby', 'reveal', 'clue', 'vote', 'guess', 'result', 'finished'].includes(
       value.phase,
     ) &&
     Number.isInteger(value.game) &&
@@ -117,12 +122,15 @@ function isRoomView(value: unknown): value is RoomView {
     value.players.some((player: PublicPlayer) => player.id === self.id) &&
     isNullableString(value.self.word) &&
     typeof value.self.hasVoted === 'boolean' &&
+    (value.self.role === undefined || isRole(value.self.role)) &&
     isNullableString(value.speakerId) &&
     Number.isInteger(value.voteCount) &&
     Array.isArray(value.voteCandidates) &&
     value.voteCandidates.every((id) => typeof id === 'string') &&
     (value.result === null || isVoteResult(value.result)) &&
-    (value.winner === null || isRole(value.winner)) &&
+    (value.winner === null ||
+      isRole(value.winner) ||
+      value.winner === 'infiltrators') &&
     (value.words === null ||
       (isRecord(value.words) &&
         typeof value.words.civilian === 'string' &&

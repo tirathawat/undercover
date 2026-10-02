@@ -46,7 +46,9 @@ export function PlayerList({ room, disabled, heading, onRemove }: Props) {
                 {player.role
                   ? player.role === 'undercover'
                     ? t('common.undercover')
-                    : t('common.civilian')
+                    : player.role === 'whiteGuy'
+                      ? t('common.whiteGuy')
+                      : t('common.civilian')
                   : !player.alive
                     ? t('players.removed')
                     : !player.connected
@@ -64,8 +66,7 @@ export function PlayerList({ room, disabled, heading, onRemove }: Props) {
             </div>
             {isHost &&
               player.id !== room.self.id &&
-              (room.phase === 'lobby' ||
-                (!player.connected && player.alive)) && (
+              (room.phase === 'lobby' || !player.connected) && (
                 <IconButton
                   className="remove-player"
                   aria-label={t('players.remove', { name: player.name })}

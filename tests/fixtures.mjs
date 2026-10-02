@@ -10,7 +10,7 @@ export const room = {
   phase: 'lobby',
   game: 0,
   round: 0,
-  settings: { category: 'mix', undercovers: 1 },
+  settings: { category: 'mix', undercovers: 1, whiteGuys: 0 },
   players: [
     {
       id: session.playerId,

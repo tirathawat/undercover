@@ -2,7 +2,7 @@ import { Trophy } from 'lucide-react';
 import { Button } from '../../../design-system/Button';
 import { useTranslation } from '../../../i18n';
 import type { StageProps } from './stage-props';
-import { VoteCounts } from './ResultStage';
+import { GuessResult, VoteCounts } from './ResultStage';
 
 export function FinishedStage({ room, disabled, send }: StageProps) {
   const { t } = useTranslation();
@@ -10,20 +10,17 @@ export function FinishedStage({ room, disabled, send }: StageProps) {
     (player) => player.id === room.result?.eliminatedId,
   );
   const isHost = room.hostId === room.self.id;
+  const winner = room.winner ?? 'undercover';
   return (
     <section className="stage-panel finished-stage">
       <span className="stage-symbol">
         <Trophy size={40} strokeWidth={1.5} aria-hidden="true" />
       </span>
-      <h2 tabIndex={-1}>
-        {room.winner === 'civilian'
-          ? t('finished.civilianWin')
-          : t('finished.undercoverWin')}
-      </h2>
+      <h2 tabIndex={-1}>{t(`finished.winners.${winner}.title`)}</h2>
       <p>
-        {room.winner === 'civilian'
-          ? t('finished.civilianDescription')
-          : t('finished.undercoverDescription')}
+        {winner === 'whiteGuy' && !room.result?.guess?.correct
+          ? t('finished.winners.whiteGuy.survivalDescription')
+          : t(`finished.winners.${winner}.description`)}
       </p>
       <div className="word-reveal">
         <div>
@@ -40,6 +37,7 @@ export function FinishedStage({ room, disabled, send }: StageProps) {
           {t('finished.lastEliminated', { name: eliminated.name })}
         </p>
       )}
+      <GuessResult room={room} final />
       <VoteCounts room={room} />
       {isHost ? (
         <Button

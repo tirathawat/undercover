@@ -155,6 +155,9 @@
 }
 
 @media (max-width: 22rem) {
+  .guess-actions {
+    grid-template-columns: 1fr;
+  }
   .rules-label {
     display: none;
   }

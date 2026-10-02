@@ -3,6 +3,7 @@ package game
 type Settings struct {
 	Category    Category `json:"category"`
 	Undercovers int      `json:"undercovers"`
+	WhiteGuys   int      `json:"whiteGuys"`
 }
 
 type Action struct {
@@ -52,6 +53,12 @@ type VoteResult struct {
 	Role         *Role          `json:"role"`
 	Counts       map[string]int `json:"counts"`
 	TiedIDs      []string       `json:"tiedIds"`
+	Guess        *GuessResult   `json:"guess,omitempty"`
+}
+
+type GuessResult struct {
+	Text    string `json:"text"`
+	Correct bool   `json:"correct"`
 }
 
 type Words struct {
@@ -61,6 +68,7 @@ type Words struct {
 
 type SelfView struct {
 	ID       string  `json:"id"`
+	Role     Role    `json:"role,omitempty"`
 	Word     *string `json:"word"`
 	HasVoted bool    `json:"hasVoted"`
 }
@@ -79,7 +87,7 @@ type View struct {
 	VoteCount      int            `json:"voteCount"`
 	VoteCandidates []string       `json:"voteCandidates"`
 	Result         *VoteResult    `json:"result"`
-	Winner         *Role          `json:"winner"`
+	Winner         *WinningTeam   `json:"winner"`
 	Words          *Words         `json:"words"`
 	History        []HistoryEntry `json:"history"`
 }

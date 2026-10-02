@@ -6,6 +6,7 @@ import {
   type GameAction,
   type RoomView,
 } from '../../../shared/game';
+import { minimumPlayers } from './room-rules';
 
 interface Props {
   room: RoomView;
@@ -16,6 +17,7 @@ interface Props {
 export function GameSettings({ room, disabled, send }: Props) {
   const { t } = useTranslation();
   const isHost = room.hostId === room.self.id;
+  const requiredPlayers = minimumPlayers(room.settings);
   if (room.phase !== 'lobby') return null;
   return (
     <section className="settings-panel">
@@ -80,7 +82,8 @@ export function GameSettings({ room, disabled, send }: Props) {
               disabled ||
               !isHost ||
               room.settings.undercovers >= 3 ||
-              (room.players.length >= 3 &&
+              (!room.settings.whiteGuys &&
+                room.players.length >= 3 &&
                 (room.settings.undercovers + 1) * 2 >= room.players.length)
             }
             onClick={() =>
@@ -98,7 +101,41 @@ export function GameSettings({ room, disabled, send }: Props) {
           </IconButton>
         </div>
       </div>
-      <p className="settings-note">{t('settings.note')}</p>
+      <div className="white-guy-setting">
+        <div>
+          <strong>{t('common.whiteGuy')}</strong>
+          <p>{t('settings.whiteGuyDescription')}</p>
+        </div>
+        <button
+          className="setting-toggle"
+          disabled={
+            disabled ||
+            !isHost ||
+            (room.settings.whiteGuys === 1 &&
+              room.players.length >= 3 &&
+              room.settings.undercovers * 2 >= room.players.length)
+          }
+          aria-label={t('settings.toggleWhiteGuy')}
+          aria-pressed={room.settings.whiteGuys === 1}
+          onClick={() =>
+            send({
+              type: 'settings',
+              stageId: room.stageId,
+              settings: {
+                ...room.settings,
+                whiteGuys: room.settings.whiteGuys ? 0 : 1,
+              },
+            })
+          }
+        >
+          {room.settings.whiteGuys ? t('settings.on') : t('settings.off')}
+        </button>
+      </div>
+      <p className="settings-note">
+        {room.settings.whiteGuys
+          ? t('settings.whiteGuyMinimum', { count: requiredPlayers })
+          : t('settings.note')}
+      </p>
     </section>
   );
 }

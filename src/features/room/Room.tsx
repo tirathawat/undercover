@@ -133,9 +133,11 @@ export function Room({ room, disabled, send }: Props) {
       )}
       <div ref={layout} className={`room-layout view-${view}`}>
         <div id="play-view" className="play-view">
-          {view === 'play' && room.phase !== 'finished' && room.self.word && (
-            <SecretWord key={`secret-${room.stageId}`} room={room} />
-          )}
+          {view === 'play' &&
+            room.phase !== 'finished' &&
+            (room.self.word || room.self.role === 'whiteGuy') && (
+              <SecretWord key={`secret-${room.stageId}`} room={room} />
+            )}
           <Stage
             key={`stage-${room.stageId}`}
             room={room}
@@ -148,10 +150,15 @@ export function Room({ room, disabled, send }: Props) {
               onClick={() => setView('people')}
             >
               <span>
-                {t('room.lobbySettings', {
-                  category: t(`categories.${room.settings.category}`),
-                  count: room.settings.undercovers,
-                })}
+                {t(
+                  room.settings.whiteGuys
+                    ? 'room.lobbySettingsWithWhiteGuy'
+                    : 'room.lobbySettings',
+                  {
+                    category: t(`categories.${room.settings.category}`),
+                    count: room.settings.undercovers,
+                  },
+                )}
               </span>
               <span>{t('room.viewSettings')}</span>
             </button>

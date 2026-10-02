@@ -255,3 +255,44 @@ test('accepts added server fields while preserving the known state contract', ()
     { type: 'state', room: view },
   );
 });
+
+test('decodes White Guy private state, guessing and shared survival winners', () => {
+  for (const winner of [null, 'whiteGuy', 'infiltrators']) {
+    const view = structuredClone(room);
+    view.phase = winner ? 'finished' : 'guess';
+    view.settings.whiteGuys = 1;
+    view.self.role = 'whiteGuy';
+    view.players[0].role = 'whiteGuy';
+    view.players[0].alive = false;
+    view.result = {
+      ...result,
+      role: 'whiteGuy',
+      ...(winner ? { guess: { text: 'กาแฟ', correct: true } } : {}),
+    };
+    view.winner = winner;
+    const message = { type: 'state', room: view };
+    assert.deepEqual(decodeServerMessage(JSON.stringify(message)), message);
+  }
+});
+
+test('rejects malformed White Guy settings, private roles and guess results', () => {
+  const patches = [
+    { settings: { ...room.settings, whiteGuys: -1 } },
+    { settings: { ...room.settings, whiteGuys: 2 } },
+    { settings: { ...room.settings, whiteGuys: '1' } },
+    { self: { ...room.self, role: 'unknown' } },
+    { result: { ...result, guess: { text: 1, correct: true } } },
+    { result: { ...result, guess: { text: 'กาแฟ', correct: 'true' } } },
+    { result: { ...result, guess: null } },
+    { players: [{ ...room.players[0], role: 'infiltrators' }] },
+  ];
+  for (const patch of patches) {
+    assert.equal(
+      decodeServerMessage(
+        JSON.stringify({ type: 'state', room: { ...room, ...patch } }),
+      ),
+      null,
+      JSON.stringify(patch),
+    );
+  }
+});

@@ -388,7 +388,7 @@ func TestEliminatedRoleVisibleInResult(t *testing.T) {
 }
 
 func TestWinAndRematchHistory(t *testing.T) {
-	for _, team := range []game.Role{"civilian", "undercover"} {
+	for _, team := range []game.WinningTeam{"civilian", "undercover"} {
 		t.Run(string(team), func(t *testing.T) {
 			r, players := begin(t, 3)
 			spy := spyID(t, r, players)

@@ -12,9 +12,17 @@ export function RevealStage({ room, disabled, send }: StageProps) {
       <span className="stage-symbol">
         <LockKeyhole size={36} strokeWidth={1.5} aria-hidden="true" />
       </span>
-      <h2 tabIndex={-1}>{t('reveal.title')}</h2>
+      <h2 tabIndex={-1}>
+        {room.settings.whiteGuys ? t('reveal.privateTitle') : t('reveal.title')}
+      </h2>
       <p>
-        {self.ready ? t('reveal.readyDescription') : t('reveal.description')}
+        {self.ready
+          ? room.settings.whiteGuys
+            ? t('reveal.privateReadyDescription')
+            : t('reveal.readyDescription')
+          : room.settings.whiteGuys
+            ? t('reveal.privateDescription')
+            : t('reveal.description')}
       </p>
       <div className="ready-progress" role="status">
         {t('reveal.progress', {
@@ -28,7 +36,11 @@ export function RevealStage({ room, disabled, send }: StageProps) {
         onClick={() => send({ type: 'ready', stageId: room.stageId })}
       >
         <Check size={18} aria-hidden="true" />{' '}
-        {self.ready ? t('reveal.waiting') : t('reveal.ready')}
+        {self.ready
+          ? t('reveal.waiting')
+          : room.settings.whiteGuys
+            ? t('reveal.privateReady')
+            : t('reveal.ready')}
       </Button>
     </section>
   );

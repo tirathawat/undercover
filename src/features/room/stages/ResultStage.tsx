@@ -22,7 +22,9 @@ export function ResultStage({ room, disabled, send }: StageProps) {
           <span className={`role-badge ${room.result?.role}`}>
             {room.result?.role === 'undercover'
               ? t('result.undercoverRole')
-              : t('result.civilianRole')}
+              : room.result?.role === 'whiteGuy'
+                ? t('result.whiteGuyRole')
+                : t('result.civilianRole')}
           </span>
         </>
       ) : (
@@ -34,6 +36,7 @@ export function ResultStage({ room, disabled, send }: StageProps) {
           <p>{t('result.tieDescription')}</p>
         </>
       )}
+      <GuessResult room={room} />
       <VoteCounts room={room} />
       {isHost ? (
         <Button
@@ -47,6 +50,27 @@ export function ResultStage({ room, disabled, send }: StageProps) {
         <span className="waiting-label">{t('result.waiting')}</span>
       )}
     </section>
+  );
+}
+
+export function GuessResult({
+  room,
+  final = false,
+}: {
+  room: RoomView;
+  final?: boolean;
+}) {
+  const { t } = useTranslation();
+  if (!room.result?.guess) return null;
+  return (
+    <p className="guess-result">
+      {t(final ? 'finished.finalGuess' : 'result.guess', {
+        text: room.result.guess.text,
+        result: room.result.guess.correct
+          ? t('result.correct')
+          : t('result.incorrect'),
+      })}
+    </p>
   );
 }
 

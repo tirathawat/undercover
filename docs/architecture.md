@@ -53,6 +53,10 @@ Messages use `state`, `reply` and `removed` envelopes. Entry replies include the
 
 Keep tokens and PIN verification material private. Message identifiers and optional translation parameters are a separate vocabulary described in [Localization](localization.md).
 
+White Guy adds a `guess` phase between vote resolution and the normal result when that role is eliminated. The domain keeps this decision atomic under the existing server mutex; it defers other win checks until the single guess resolves. `self.role` reveals only White Guy to that player, while `self.word` stays null. Public roles still reveal only on elimination or game completion. `result.guess` exists only after a submitted guess and records its text and correctness. `winner` can also be `whiteGuy` or `infiltrators`, the latter naming a joint survival win. `guess` and `skipGuess` carry the same stage guard as other actions.
+
+Ship frontend and server together. Older open tabs do not recognize the new phase or winners and must reload after deployment. Settings omitted by an older request retain Go's zero value for White Guy; default games keep their existing rule behavior. Rollback clears in-memory rooms and requires another frontend reload.
+
 ## UI primitives and styles
 
 [`Button`](../src/design-system/Button.tsx) and [`IconButton`](../src/design-system/IconButton.tsx) default to `type="button"`; form submission requires `type="submit"`. Icon buttons require an accessible label. [`Modal`](../src/design-system/Modal.tsx) owns native dialog semantics, busy handling, Escape behavior and focus restoration; callers provide the title and localized close label.

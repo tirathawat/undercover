@@ -11,7 +11,7 @@ import (
 
 func TestEnumBackedJSONPreservesWireShape(t *testing.T) {
 	undercover := game.RoleUndercover
-	civilian := game.RoleCivilian
+	civilian := game.TeamCivilian
 	tests := []struct {
 		name       string
 		view       game.View

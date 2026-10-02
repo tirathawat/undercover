@@ -31,6 +31,7 @@ export function RulesModal({ close }: { close: () => void }) {
           <strong>{t('rules.winnerTitle')}</strong>
           <p>{t('rules.civilianWin')}</p>
           <p>{t('rules.undercoverWin')}</p>
+          <p>{t('rules.whiteGuyWin')}</p>
         </li>
       </ol>
       <div className="rules-note">{t('rules.recovery')}</div>

@@ -26,7 +26,9 @@ const (
 	MessageIDHostRequired                     MessageID = "HOST_REQUIRED"
 	MessageIDActionNotAllowedInPhase          MessageID = "ACTION_NOT_ALLOWED_IN_PHASE"
 	MessageIDUndercoverCountOutOfRange        MessageID = "UNDERCOVER_COUNT_OUT_OF_RANGE"
+	MessageIDWhiteGuyCountOutOfRange          MessageID = "WHITE_GUY_COUNT_OUT_OF_RANGE"
 	MessageIDTeamBalanceInvalid               MessageID = "TEAM_BALANCE_INVALID"
+	MessageIDWhiteGuyTeamBalanceInvalid       MessageID = "WHITE_GUY_TEAM_BALANCE_INVALID"
 	MessageIDSettingsRequired                 MessageID = "SETTINGS_REQUIRED"
 	MessageIDCategoryInvalid                  MessageID = "CATEGORY_INVALID"
 	MessageIDMinimumPlayersRequired           MessageID = "MINIMUM_PLAYERS_REQUIRED"
@@ -40,6 +42,8 @@ const (
 	MessageIDVoteAlreadyCast                  MessageID = "VOTE_ALREADY_CAST"
 	MessageIDConnectedPlayersPendingVote      MessageID = "CONNECTED_PLAYERS_PENDING_VOTE"
 	MessageIDNoVotesCast                      MessageID = "NO_VOTES_CAST"
+	MessageIDNotGuessingPlayer                MessageID = "NOT_GUESSING_PLAYER"
+	MessageIDGuesserStillConnected            MessageID = "GUESSER_STILL_CONNECTED"
 	MessageIDGameAlreadyStarted               MessageID = "GAME_ALREADY_STARTED"
 	MessageIDAvatarInvalid                    MessageID = "AVATAR_INVALID"
 	MessageIDPINFormatInvalid                 MessageID = "PIN_FORMAT_INVALID"
@@ -144,8 +148,19 @@ func messageText(id MessageID, params MessageParams) (string, error) {
 		return staticMessage(params, "คำสั่งนี้ใช้ในช่วงนี้ไม่ได้")
 	case MessageIDUndercoverCountOutOfRange:
 		return staticMessage(params, "เลือก Undercover ได้ 1–3 คน")
+	case MessageIDWhiteGuyCountOutOfRange:
+		return staticMessage(params, "เลือก White Guy ได้ 0–1 คน")
 	case MessageIDTeamBalanceInvalid:
 		return staticMessage(params, "ฝ่ายพลเมืองต้องมากกว่า Undercover")
+	case MessageIDWhiteGuyTeamBalanceInvalid:
+		if len(params) != 1 {
+			return "", errors.New("WHITE_GUY_TEAM_BALANCE_INVALID requires min parameter")
+		}
+		minimum, err := requiredNumberParam(params, "min")
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("การตั้งค่านี้ต้องมีผู้เล่นอย่างน้อย %v คน", minimum), nil
 	case MessageIDSettingsRequired:
 		return staticMessage(params, "ไม่มีการตั้งค่า")
 	case MessageIDCategoryInvalid:
@@ -172,6 +187,10 @@ func messageText(id MessageID, params MessageParams) (string, error) {
 		return staticMessage(params, "รอผู้เล่นที่ออนไลน์โหวตให้ครบก่อน")
 	case MessageIDNoVotesCast:
 		return staticMessage(params, "ยังไม่มีใครโหวต")
+	case MessageIDNotGuessingPlayer:
+		return staticMessage(params, "เฉพาะ White Guy ที่ถูกโหวตออกเท่านั้นที่ทายได้")
+	case MessageIDGuesserStillConnected:
+		return staticMessage(params, "White Guy ยังออนไลน์ ให้เขาทายคำเอง")
 	case MessageIDGameAlreadyStarted:
 		return staticMessage(params, "เกมเริ่มแล้ว รอเข้าห้องตอนเกมถัดไป")
 	case MessageIDAvatarInvalid:

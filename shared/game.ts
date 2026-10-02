@@ -2,12 +2,14 @@ import type { MessageMetadata } from './messages';
 
 export type Category = 'mix' | 'food' | 'places' | 'things';
 export type Phase =
-  'lobby' | 'reveal' | 'clue' | 'vote' | 'result' | 'finished';
-export type Role = 'civilian' | 'undercover';
+  'lobby' | 'reveal' | 'clue' | 'vote' | 'guess' | 'result' | 'finished';
+export type Role = 'civilian' | 'undercover' | 'whiteGuy';
+export type WinningTeam = Role | 'infiltrators';
 
 export interface Settings {
   category: Category;
   undercovers: number;
+  whiteGuys: number;
 }
 
 export interface PublicPlayer {
@@ -36,6 +38,7 @@ export interface VoteResult {
   role: Role | null;
   counts: Record<string, number>;
   tiedIds: string[];
+  guess?: { text: string; correct: boolean };
 }
 
 export interface RoomView {
@@ -47,12 +50,12 @@ export interface RoomView {
   round: number;
   settings: Settings;
   players: PublicPlayer[];
-  self: { id: string; word: string | null; hasVoted: boolean };
+  self: { id: string; word: string | null; hasVoted: boolean; role?: Role };
   speakerId: string | null;
   voteCount: number;
   voteCandidates: string[];
   result: VoteResult | null;
-  winner: Role | null;
+  winner: WinningTeam | null;
   words: { civilian: string; undercover: string } | null;
   history: HistoryEntry[];
 }
@@ -70,10 +73,18 @@ export type GameAction =
   | { type: 'resume'; code: string; token: string }
   | { type: 'settings'; stageId: string; settings: Settings }
   | {
-      type: 'start' | 'ready' | 'skip' | 'finishVote' | 'next' | 'rematch';
+      type:
+        | 'start'
+        | 'ready'
+        | 'skip'
+        | 'finishVote'
+        | 'next'
+        | 'rematch'
+        | 'skipGuess';
       stageId: string;
     }
   | { type: 'clue'; stageId: string; text: string }
+  | { type: 'guess'; stageId: string; text: string }
   | { type: 'vote'; stageId: string; targetId: string }
   | { type: 'remove'; stageId: string; targetId: string }
   | { type: 'leave' };
