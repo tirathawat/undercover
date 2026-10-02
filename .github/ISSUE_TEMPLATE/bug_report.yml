@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a problem with Undercover Club
+title: '[Bug]: '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Please do not include player PINs, room credentials, or other private data. [Report security vulnerabilities privately](https://github.com/tirathawat/undercover/security/advisories/new).
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happened?
+      description: Describe the behavior you observed.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the room or game state needed to reproduce the problem. Do not include credentials.
+      placeholder: |
+        1. Start or join a room
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      description: Include browser version and device or operating system.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant errors or screenshots
+      description: Remove personal or private information before sharing.
+    validations:
+      required: false

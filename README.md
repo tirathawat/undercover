@@ -1,12 +1,30 @@
 # Undercover Club
 
+![Undercover Club — one word, one clue, who is undercover?](docs/assets/cover.jpg)
+
+[![CI](https://github.com/tirathawat/undercover/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tirathawat/undercover/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tirathawat/undercover?color=6750a4)](https://github.com/tirathawat/undercover/releases)
+
+**[Play online](https://undercover-club.up.railway.app/)** · [Quick start](#local-development) · [Releases](https://github.com/tirathawat/undercover/releases) · [Contributing](CONTRIBUTING.md)
+
 A browser-based Undercover game for friends playing together in person. Each player uses a phone to read a private word, submit clues and vote. Discussion happens out loud; the app records clues and has no chat.
 
 Built with React, TypeScript and Vite, backed by a Go WebSocket server. The shipped interface and word packs are Thai; project documentation is English.
 
+## Play with friends
+
+1. Gather at least three players, each with a phone, and open [Undercover Club](https://undercover-club.up.railway.app/).
+2. Create a room with your nickname and a six-digit PIN, then share the room code or invite link.
+3. Read your private word, take turns giving clues, and discuss who sounds different.
+4. Vote, reveal the result, and play another round or a rematch.
+
+The app keeps clue history, resolves tied votes with a runoff, and lets players recover their seat with their name and PIN. No account or installation is required. Keep your PIN private; rooms are temporary and disappear after a server restart.
+
+![The deployed Thai interface for creating or joining an Undercover room](docs/assets/home.jpg)
+
 ## Local development
 
-Requires Node.js 22.12 or later and Go 1.26.4 or later.
+Requires Node.js 22.22.2 or later on the 22.x release line and Go 1.26.4 or later. Node.js 24.15.0+ on 24.x and Node.js 26+ are also supported by the package requirements; CI and Docker use Node.js 22.
 
 ```sh
 npm ci
@@ -85,5 +103,8 @@ For UI or gameplay changes, also exercise create/join/recovery, reveal, clues, v
 - [Architecture](docs/architecture.md): ownership, state, protocol and extension points.
 - [Interface design](docs/design.md): visual direction, interaction and accessibility constraints.
 - [Localization](docs/localization.md): catalogs, adding a locale and server message compatibility.
+- [Releases and deployment](docs/releases.md): version tags, CI, Railway deployment and rollback.
+- [Contributing](CONTRIBUTING.md): development checks and pull requests.
+- [Security](SECURITY.md): private vulnerability reporting.
 
 Update the relevant document when behavior or setup changes. Keep facts in one place and link to their owning code. Temporary audit reports, verification logs and screenshots belong in review artifacts rather than permanent project documentation.
