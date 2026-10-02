@@ -15,7 +15,7 @@ COPY cmd ./cmd
 COPY internal ./internal
 RUN CGO_ENABLED=0 go build -trimpath -o /undercover ./cmd/undercover
 
-FROM alpine:3.22
+FROM alpine:3.24
 WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=backend /undercover ./undercover
