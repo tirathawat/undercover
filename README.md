@@ -24,7 +24,7 @@ The app keeps clue history, resolves tied votes with a runoff, and lets players 
 
 ## Local development
 
-Requires Node.js 22.22.2 or later on the 22.x release line and Go 1.26.4 or later. Node.js 24.15.0+ on 24.x and Node.js 26+ are also supported by the package requirements; CI and Docker use Node.js 22.
+Requires Node.js 22.22.2 or later on the 22.x release line and Go 1.26.4 or later. Node.js 24.15.0+ on 24.x and Node.js 26+ are also supported by the package requirements. CI reads the Node.js and Go versions from the Dockerfile so dependency updates run the full checks with the same toolchains used to build the app. Compatibility jobs also check the minimum supported Node.js 22/24 versions with the Go version declared in `go.mod`.
 
 ```sh
 npm ci

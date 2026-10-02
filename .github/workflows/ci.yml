@@ -26,15 +26,25 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Read Docker toolchain versions
+        id: toolchain
+        shell: bash
+        run: |
+          node_version="$(sed -nE 's/^FROM node:([0-9]+(\.[0-9]+){0,2})-alpine[^ ]* AS frontend$/\1/p' Dockerfile)"
+          go_version="$(sed -nE 's/^FROM golang:([0-9]+\.[0-9]+\.[0-9]+)-alpine[^ ]* AS backend$/\1/p' Dockerfile)"
+          test -n "${node_version}"
+          test -n "${go_version}"
+          echo "node=${node_version}" >> "${GITHUB_OUTPUT}"
+          echo "go=${go_version}" >> "${GITHUB_OUTPUT}"
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: ${{ steps.toolchain.outputs.node }}
           cache: npm
       - name: Set up Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: go.mod
+          go-version: ${{ steps.toolchain.outputs.go }}
           cache: true
       - name: Verify release tag
         if: startsWith(github.ref, 'refs/tags/')
@@ -82,6 +92,42 @@ jobs:
       - name: Build server
         run: npm run build:server
 
+  compatibility:
+    name: Compatibility (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - '22.22.2'
+          - '24.15.0'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+      - name: Run linters
+        run: npm run lint
+      - name: Build frontend
+        run: npm run build
+      - name: Build server
+        run: npm run build:server
+
   container-smoke:
     name: Container smoke
     runs-on: ubuntu-latest
@@ -109,6 +155,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - checks
+      - compatibility
       - container-smoke
     runs-on: ubuntu-latest
     permissions:
