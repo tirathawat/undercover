@@ -53,6 +53,11 @@
   --md-sys-control-size-icon: 48px;
   --md-sys-control-size-icon-compact: 44px;
   --md-sys-size-avatar: 44px;
+  --md-sys-motion-duration-short: 140ms;
+  --md-sys-motion-duration-medium: 240ms;
+  --md-sys-motion-duration-long: 320ms;
+  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-easing-enter: cubic-bezier(0.16, 1, 0.3, 1);
   color: var(--md-sys-color-on-surface);
   background: var(--md-sys-color-surface);
   font-family: var(--md-ref-typeface-plain);

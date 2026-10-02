@@ -1,0 +1,197 @@
+.typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--md-sys-space-2);
+  min-height: 24px;
+}
+
+.typing-dots > i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-intro,
+  .entry-card,
+  .room-page-heading,
+  .share-bar,
+  .restoring-state {
+    animation: surface-enter var(--md-sys-motion-duration-long)
+      var(--md-sys-motion-easing-enter);
+  }
+
+  .stage-panel,
+  .settings-panel,
+  .secret-card,
+  .room-code-field,
+  .recovery-intro,
+  .avatar-field,
+  .copy-fallback,
+  .empty-history,
+  .vote-submitted,
+  .error-banner,
+  .offline-banner,
+  .field-error {
+    animation: surface-enter var(--md-sys-motion-duration-medium)
+      var(--md-sys-motion-easing-enter);
+  }
+
+  .history-feed > li:last-child,
+  .player-row,
+  .lobby-avatars > .avatar {
+    animation: fade-enter var(--md-sys-motion-duration-medium)
+      var(--md-sys-motion-easing-standard);
+  }
+
+  .button,
+  .icon-button,
+  .text-link,
+  .segmented-control button,
+  .avatar-picker button,
+  .vote-option,
+  .vote-radio,
+  .category-grid > button,
+  .history-filter,
+  .room-navigation > button,
+  .nav-icon,
+  .pin-visibility,
+  .lobby-settings-link,
+  input,
+  select {
+    transition:
+      background-color var(--md-sys-motion-duration-short)
+        var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-short)
+        var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-short)
+        var(--md-sys-motion-easing-standard),
+      transform var(--md-sys-motion-duration-short)
+        var(--md-sys-motion-easing-standard);
+  }
+
+  .button:active:not(:disabled),
+  .icon-button:active:not(:disabled),
+  .avatar-picker button:active:not(:disabled),
+  .vote-option:active:not(:disabled),
+  .pin-visibility:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .avatar-picker button[aria-pressed='true'] .avatar,
+  .avatar-check,
+  .vote-radio > svg,
+  .category-grid > button > svg,
+  .filter-check,
+  .room-navigation > button[aria-current='page'] .nav-icon > svg,
+  .vote-submitted > svg,
+  .role-badge,
+  .finished-stage .stage-symbol {
+    animation: selection-enter var(--md-sys-motion-duration-medium)
+      var(--md-sys-motion-easing-enter);
+  }
+
+  .secret-card.revealed .secret-word,
+  .word-reveal strong {
+    animation: surface-enter var(--md-sys-motion-duration-medium)
+      var(--md-sys-motion-easing-enter);
+  }
+
+  .vote-bar > i {
+    transform-origin: left;
+    animation: vote-bar-enter var(--md-sys-motion-duration-long)
+      var(--md-sys-motion-easing-enter);
+  }
+
+  .modal[open] {
+    animation: dialog-enter var(--md-sys-motion-duration-medium)
+      var(--md-sys-motion-easing-enter);
+  }
+
+  .modal[open]::backdrop {
+    animation: backdrop-enter var(--md-sys-motion-duration-medium)
+      var(--md-sys-motion-easing-standard);
+  }
+
+  .typing-dots > i {
+    animation: waiting-dot 1.2s ease-in-out 3;
+  }
+
+  .typing-dots > i:nth-child(2) {
+    animation-delay: 120ms;
+  }
+
+  .typing-dots > i:nth-child(3) {
+    animation-delay: 240ms;
+  }
+
+  @keyframes surface-enter {
+    from {
+      opacity: 0.75;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-enter {
+    from {
+      opacity: 0.75;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes selection-enter {
+    from {
+      transform: scale(0.85);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes vote-bar-enter {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes dialog-enter {
+    from {
+      opacity: 0.75;
+      transform: translateY(8px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes backdrop-enter {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes waiting-dot {
+    0%,
+    60%,
+    100% {
+      transform: translateY(0);
+    }
+    30% {
+      transform: translateY(-4px);
+    }
+  }
+}

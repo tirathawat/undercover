@@ -27,6 +27,12 @@ Use filled buttons for the current task, tonal buttons for supporting actions an
 - Move focus to the destination heading after stage or view changes. Dialogs retain focus while open and restore it to the opener on close.
 - Preserve reduced-motion and forced-colors support. Long names, clues and translated copy must wrap without horizontal overflow.
 
+## Motion
+
+[`src/styles/motion.css`](../src/styles/motion.css) owns motion; duration and easing tokens live in the design-system tokens. Use short color and press transitions for controls, brief entrances for pages, stages, panels and feedback, and a single emphasis for selections and results. Animate the newest history row while keeping older clues still. Vote bars grow within their final width. Reconnection dots stop within four seconds; the status text remains visible while waiting.
+
+Enable animation only under `prefers-reduced-motion: no-preference`. Keep content and controls usable immediately, preserve existing component keys and draft ownership, and conceal private words and PINs immediately. Do not delay gameplay, dialog closure or focus changes for an animation, animate scrolling, or retain outgoing private content.
+
 ## Review checklist
 
 Inspect entry, lobby, reveal, clues, voting/runoff, results, rematch, history, settings, offline feedback and recovery at 320px, 390px and desktop widths. Check keyboard navigation, focus after errors, dialog busy states, word concealment and long content. Use real phones and screen readers when validating device-specific behavior; desktop viewport checks do not establish that coverage.
