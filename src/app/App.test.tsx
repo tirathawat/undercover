@@ -53,7 +53,7 @@ function room(overrides: Partial<RoomView> = {}): RoomView {
     phase: 'reveal',
     game: 1,
     round: 0,
-    settings: { category: 'food', undercovers: 1 },
+    settings: { category: 'food', undercovers: 1, whiteGuys: 0 },
     players: ['a', 'b', 'c'].map((id, avatar) => ({
       id,
       name: id,

@@ -29,23 +29,28 @@ export const thUI = {
     host: 'เจ้าของห้อง',
     civilian: 'พลเมือง',
     undercover: 'Undercover',
+    whiteGuy: 'White Guy',
   },
   rules: {
     title: 'รู้กติกา ก่อนจับพิรุธ',
-    inviteTitle: 'ชวนเพื่อน 3 คนขึ้นไป',
-    inviteDescription: 'สร้างห้องแล้วแชร์ลิงก์ ไม่ต้องสมัครบัญชี',
-    secretTitle: 'แต่ละคนได้รับคำลับ',
+    inviteTitle: 'ชวนเพื่อนให้ครบจำนวน',
+    inviteDescription:
+      'สร้างห้องแล้วแชร์ลิงก์ ไม่ต้องสมัครบัญชี เล่นแบบปกติเริ่มที่ 3 คน และต้องเพิ่มผู้เล่นเมื่อเปิด White Guy',
+    secretTitle: 'แต่ละคนดูข้อมูลลับของตัวเอง',
     secretDescription:
-      'พลเมืองได้คำเดียวกัน ส่วน Undercover ได้คำคล้ายกัน ทุกคนเห็นเฉพาะคำของตัวเองและไม่รู้ฝ่ายตัวเอง',
+      'พลเมืองได้คำเดียวกัน Undercover ได้คำคล้ายกัน ส่วน White Guy ไม่มีคำลับ ทุกคนเห็นเฉพาะข้อมูลของตัวเองและไม่รู้ฝ่ายคนอื่น',
     clueTitle: 'ผลัดกันพิมพ์คำใบ้',
     clueDescription:
-      'ใบ้หนึ่งคำหรือหนึ่งประโยค โดยไม่บอกคำลับตรง ๆ คำใบ้ทุกครั้งเก็บไว้ในสมุด ย้อนดูได้ทุกเกมในห้องเดิม',
+      'ใบ้หนึ่งคำหรือหนึ่งประโยค โดยไม่บอกคำลับตรง ๆ รอบแรก White Guy จะไม่ได้เริ่มใบ้ คำใบ้ทุกครั้งเก็บไว้ในสมุด ย้อนดูได้ทุกเกมในห้องเดิม',
     voteTitle: 'คุยกันต่อหน้า แล้วโหวตคนที่น่าสงสัย',
     voteDescription:
       'ห้ามโหวตตัวเองและแก้โหวต คะแนนเปิดเมื่อโหวตครบ ถ้าเสมอให้โหวตใหม่เฉพาะคนที่คะแนนสูงสุด',
     winnerTitle: 'ฝ่ายไหนจะชนะ?',
-    civilianWin: 'พลเมืองชนะเมื่อจับ Undercover ได้ครบ',
-    undercoverWin: 'Undercover ชนะเมื่อเหลือจำนวนเท่ากับหรือมากกว่าพลเมือง',
+    civilianWin: 'พลเมืองชนะเมื่อจับ Undercover และ White Guy ได้ครบ',
+    undercoverWin:
+      'ฝ่ายแฝงตัวชนะเมื่อจำนวน Undercover และ White Guy ที่เหลือรวมกันเท่ากับหรือมากกว่าพลเมือง',
+    whiteGuyWin:
+      'ถ้า White Guy ถูกโหวตออก จะได้ทายคำของพลเมืองหนึ่งครั้ง หากทายถูก White Guy ชนะคนเดียว',
     recovery:
       'หลุดแล้วกลับอัตโนมัติจากแท็บเดิม หรือใช้รหัสห้อง ชื่อเดิม และ PIN เพื่อกลับจากแท็บใหม่หรือเครื่องอื่นได้ ตราบใดที่ห้องยังอยู่ หากกดออกหรือถูกนำออกจะกลับเข้าผู้เล่นเดิมไม่ได้ เจ้าของห้องข้ามตาคนที่หลุดได้ และสิทธิ์เจ้าของห้องย้ายให้คนออนไลน์เมื่อเจ้าของเดิมหลุด',
     close: 'ปิดกติกา',
@@ -118,6 +123,7 @@ export const thUI = {
       reveal: 'ดูคำลับ',
       clue: 'ให้คำใบ้',
       vote: 'โหวต',
+      guess: 'ทายคำสุดท้าย',
       result: 'ผลโหวต',
       finished: 'จบเกม',
     },
@@ -135,6 +141,8 @@ export const thUI = {
     copyFallback: 'เลือกข้อความแล้วคัดลอกลิงก์ด้านล่างให้เพื่อน',
     shareLink: 'ลิงก์เข้าห้อง',
     lobbySettings: '{{category}} · Undercover {{count}} คน',
+    lobbySettingsWithWhiteGuy:
+      '{{category}} · Undercover {{count}} คน · White Guy 1 คน',
     viewSettings: 'ดูผู้เล่นและตั้งค่า',
     navigation: 'มุมมองห้อง',
     gameView: 'เกม',
@@ -146,6 +154,10 @@ export const thUI = {
     label: 'คำลับของคุณ',
     hide: 'ซ่อนคำ',
     show: 'ดูคำลับ',
+    privateLabel: 'ข้อมูลลับของคุณ',
+    whiteGuyRole: 'คุณคือ White Guy',
+    hidePrivate: 'ซ่อนข้อมูลลับ',
+    showPrivate: 'ดูข้อมูลลับ',
   },
   players: {
     title: 'เพื่อนในวง',
@@ -175,9 +187,14 @@ export const thUI = {
     participantDescription: 'เจ้าของห้องเป็นคนตั้งค่า',
     category: 'หมวดคำลับ',
     undercoverDescription: 'ได้คำต่างจากพลเมือง',
+    whiteGuyDescription: 'ไม่มีคำลับ และได้ทายคำหนึ่งครั้งเมื่อถูกโหวตออก',
     decreaseUndercover: 'ลดจำนวน Undercover',
     increaseUndercover: 'เพิ่มจำนวน Undercover',
+    toggleWhiteGuy: 'เปิด White Guy',
+    on: 'เปิดอยู่',
+    off: 'ปิดอยู่',
     note: 'พลเมืองต้องมากกว่า Undercover ตอนเริ่มเกม',
+    whiteGuyMinimum: 'เกมนี้ต้องมีอย่างน้อย {{count}} คน',
   },
   history: {
     title: 'สมุดคำใบ้',
@@ -222,13 +239,18 @@ export const thUI = {
     missingPlayers: 'อีก {{count}} คนก็เริ่มได้ แชร์รหัสห้องให้เพื่อนเลย',
     readyDescription: 'เลือกหมวดคำในหน้าผู้เล่น แล้วเริ่มเกมกัน',
     playerCount: '{{count}} คนในห้อง · เล่นได้ตั้งแต่ 3 คน',
+    playerCountWithMinimum:
+      '{{count}} คนในห้อง · เกมนี้เริ่มได้ตั้งแต่ {{minimum}} คน',
     start: 'เริ่มเกม',
     waiting: 'รอเจ้าของห้องเริ่มเกม',
     hostDisconnected:
       'รอเพื่อนที่หลุดกลับมา หรือไปหน้าผู้เล่นเพื่อนำออกก่อนเริ่ม',
     participantDisconnected:
       'รอเพื่อนที่หลุดกลับมา หรือให้เจ้าของห้องนำออกก่อนเริ่ม',
-    civilianMajority: 'ฝ่ายพลเมืองต้องมากกว่า Undercover',
+    civilianMajority:
+      'ต้องมีอย่างน้อย {{count}} คน เพื่อให้พลเมืองเป็นฝ่ายข้างมาก',
+    whiteGuyMinimum:
+      'ต้องมีอย่างน้อย {{count}} คน เพื่อให้พลเมืองมากกว่าอีกสองฝ่าย',
   },
   reveal: {
     title: 'ดูคำลับ แล้วเก็บไว้ในใจ',
@@ -238,6 +260,11 @@ export const thUI = {
     progress: '{{ready}} / {{count}} คนพร้อมแล้ว',
     waiting: 'พร้อมแล้ว รอเพื่อน',
     ready: 'จำคำแล้ว พร้อมเล่น',
+    privateTitle: 'ดูข้อมูลลับ แล้วเก็บไว้ในใจ',
+    privateReadyDescription: 'คุณพร้อมแล้ว รอให้เพื่อนดูข้อมูลลับครบทุกคน',
+    privateDescription:
+      'ดูข้อมูลลับของคุณโดยไม่ให้เพื่อนเห็นจอ เมื่อจำได้แล้ว กดพร้อมเพื่อรอเพื่อน',
+    privateReady: 'จำข้อมูลแล้ว พร้อมเล่น',
   },
   vote: {
     round: 'รอบ {{round}} · โหวต',
@@ -245,6 +272,8 @@ export const thUI = {
     title: 'ใครได้คำไม่เหมือนพวกเรา?',
     description:
       'เปิดสมุดคำใบ้ คุยกันต่อหน้า<br />แล้วเลือกคนที่คิดว่าเป็น Undercover',
+    descriptionWithWhiteGuy:
+      'เปิดสมุดคำใบ้ คุยกันต่อหน้า<br />แล้วเลือกคนที่คิดว่าเป็น Undercover หรือ White Guy',
     progress: '{{votes}} / {{count}} คนโหวตแล้ว',
     candidates: 'เลือกผู้เล่นที่สงสัย',
     confirm: 'ยืนยันโหวต',
@@ -257,6 +286,7 @@ export const thUI = {
   result: {
     eliminatedTitle: '{{name}} ถูกโหวตออก',
     undercoverRole: 'เป็น Undercover',
+    whiteGuyRole: 'เป็น White Guy',
     civilianRole: 'เป็นพลเมือง',
     tieTitle: 'คะแนนเสมอกัน',
     tieDescription: 'ยังไม่มีใครออก โหวตใหม่เฉพาะคนที่คะแนนสูงสุด',
@@ -265,15 +295,58 @@ export const thUI = {
     waiting: 'รอเจ้าของห้องเริ่มช่วงถัดไป',
     removedPlayer: 'ผู้เล่นที่ออก',
     voteCount: '{{count}} โหวต',
+    guess: 'ทายว่า “{{text}}” — {{result}}',
+    correct: 'ถูกต้อง',
+    incorrect: 'ไม่ถูกต้อง',
+  },
+  guess: {
+    yourTitle: 'โอกาสสุดท้ายของ White Guy',
+    waitingTitle: 'White Guy กำลังทายคำ',
+    yourDescription:
+      'ทายได้ครั้งเดียว หากตรงกับคำลับของพลเมือง คุณชนะเกมนี้คนเดียว',
+    waitingDescription: '{{name}} ถูกโหวตออกและกำลังทายคำลับของพลเมือง',
+    label: 'ทายคำลับของพลเมือง',
+    placeholder: 'พิมพ์คำตอบสุดท้าย',
+    length: '{{count}}/80 ตัวอักษร',
+    review: 'ตรวจคำตอบก่อนส่ง',
+    reviewLabel: 'คำตอบที่กำลังจะส่ง',
+    reviewWarning: 'ส่งแล้วแก้ไม่ได้ และผลจะเปิดให้ทุกคนเห็น',
+    edit: 'กลับไปแก้',
+    confirm: 'ยืนยันคำตอบสุดท้าย',
+    submitting: 'กำลังส่งคำตอบ…',
+    submitted: 'ส่งคำตอบแล้ว รอเปิดผล',
+    waiting: 'รอ White Guy ส่งคำตอบสุดท้าย',
+    skip: 'ข้ามการทายคำ',
+    skipWarning:
+      '{{name}} หลุดการเชื่อมต่อ การข้ามจะทำให้คำตอบสุดท้ายไม่ถูกส่ง',
+    cancelSkip: 'รอต่อ',
+    confirmSkip: 'ยืนยันข้ามการทายคำ',
   },
   finished: {
-    civilianWin: 'พลเมืองชนะ!',
-    undercoverWin: 'Undercover ชนะ!',
-    civilianDescription: 'จับสายลับได้ครบแล้ว มาดูคำลับกัน',
-    undercoverDescription: 'สายลับอยู่รอดจนพลเมืองจับไม่ทัน',
+    winners: {
+      civilian: {
+        title: 'พลเมืองชนะ!',
+        description: 'จับสายลับได้ครบแล้ว มาดูคำลับกัน',
+      },
+      undercover: {
+        title: 'Undercover ชนะ!',
+        description: 'สายลับอยู่รอดจนพลเมืองจับไม่ทัน',
+      },
+      whiteGuy: {
+        title: 'White Guy ชนะ!',
+        description: 'ทายคำลับของพลเมืองได้ถูกต้องและชนะเกมนี้คนเดียว',
+        survivalDescription: 'White Guy อยู่รอดจนมีจำนวนไม่น้อยกว่าพลเมือง',
+      },
+      infiltrators: {
+        title: 'ทีมแฝงตัวชนะ',
+        description:
+          'Undercover และ White Guy ที่เหลือมีจำนวนไม่น้อยกว่าพลเมือง',
+      },
+    },
     civilianWord: 'คำของพลเมือง',
     undercoverWord: 'คำของ Undercover',
     lastEliminated: 'โหวตสุดท้าย: {{name}} ถูกโหวตออก',
+    finalGuess: 'คำตอบสุดท้าย: “{{text}}” — {{result}}',
     rematch: 'เล่นอีกเกม',
     waiting: 'รอเจ้าของห้องเปิดเกมใหม่',
     historyNote: 'คำใบ้ทุกเกมยังอยู่ในสมุดของห้องนี้',

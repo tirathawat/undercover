@@ -27,7 +27,7 @@ type Room struct {
 	votes          map[string]string
 	voteCandidates []string
 	result         *VoteResult
-	winner         *Role
+	winner         *WinningTeam
 	words          *Words
 	history        []HistoryEntry
 	now            func() time.Time
@@ -88,6 +88,10 @@ func (r *Room) Apply(id string, a Action) error {
 		err = r.vote(p, a.TargetID)
 	case ActionFinishVote:
 		err = r.finishVote(id)
+	case ActionGuess:
+		err = r.guess(p, a.Text)
+	case ActionSkipGuess:
+		err = r.skipGuess(id)
 	case ActionNext:
 		err = r.next(id)
 	case ActionRematch:
@@ -130,6 +134,9 @@ func (r *Room) Snapshot(id string) (View, error) {
 		Winner:         cloneString(r.winner),
 		History:        cloneHistory(r.history),
 	}
+	if self.Role == RoleWhiteGuy {
+		v.Self.Role = self.Role
+	}
 	for _, p := range r.players {
 		public := p.PlayerView
 		if p.Alive && r.phase != PhaseFinished {
@@ -151,6 +158,10 @@ func (r *Room) Snapshot(id string) (View, error) {
 		result.Role = cloneString(r.result.Role)
 		result.Counts = maps.Clone(r.result.Counts)
 		result.TiedIDs = append([]string{}, r.result.TiedIDs...)
+		if r.result.Guess != nil {
+			guess := *r.result.Guess
+			result.Guess = &guess
+		}
 		v.Result = &result
 	}
 	return v, nil
@@ -196,12 +207,17 @@ func (r *Room) requireHostPhase(id string, phase Phase) error {
 func (r *Room) beginStage(phase Phase) { r.phase = phase; r.stageID = rand.Text() }
 func (r *Room) touch()                 { r.LastActive = time.Now() }
 
-func (r *Room) checkTeamSizes(undercovers int) error {
-	if undercovers < 1 || undercovers > 3 {
+func (r *Room) checkTeamSizes(settings Settings) error {
+	if settings.Undercovers < 1 || settings.Undercovers > 3 {
 		return invalid(MessageIDUndercoverCountOutOfRange, nil)
 	}
-	if undercovers*2 >= len(r.players) {
+	if settings.WhiteGuys == 0 && settings.Undercovers*2 >= len(r.players) {
 		return invalid(MessageIDTeamBalanceInvalid, nil)
+	}
+	if settings.WhiteGuys > 0 &&
+		(settings.Undercovers+settings.WhiteGuys)*2 >= len(r.players) {
+		minimum := 2*(settings.Undercovers+settings.WhiteGuys) + 1
+		return invalid(MessageIDWhiteGuyTeamBalanceInvalid, MessageParams{"min": minimum})
 	}
 	return nil
 }
@@ -219,8 +235,11 @@ func (r *Room) updateSettings(id string, settings *Settings) error {
 	if settings.Undercovers < 1 || settings.Undercovers > 3 {
 		return invalid(MessageIDUndercoverCountOutOfRange, nil)
 	}
-	if len(r.players) >= 3 {
-		if err := r.checkTeamSizes(settings.Undercovers); err != nil {
+	if settings.WhiteGuys < 0 || settings.WhiteGuys > 1 {
+		return invalid(MessageIDWhiteGuyCountOutOfRange, nil)
+	}
+	if settings.WhiteGuys == 0 && len(r.players) >= 3 {
+		if err := r.checkTeamSizes(*settings); err != nil {
 			return err
 		}
 	}
@@ -241,7 +260,7 @@ func (r *Room) start(id string) error {
 	if len(r.history) > 1800 {
 		return invalid(MessageIDRoomHistoryLimitApproaching, nil)
 	}
-	if err := r.checkTeamSizes(r.settings.Undercovers); err != nil {
+	if err := r.checkTeamSizes(r.settings); err != nil {
 		return err
 	}
 	r.assignWords()
@@ -276,6 +295,12 @@ func (r *Room) assignWords() {
 		if index < r.settings.Undercovers {
 			p.Role = RoleUndercover
 			word = pair[1]
+		} else if index < r.settings.Undercovers+r.settings.WhiteGuys {
+			p.Role = RoleWhiteGuy
+			p.word = nil
+			p.Ready = false
+			p.Alive = true
+			continue
 		}
 		p.word = &word
 		p.Ready = false
@@ -309,11 +334,22 @@ func (r *Room) beginRound() {
 	mathrand.Shuffle(len(r.order), func(i, j int) {
 		r.order[i], r.order[j] = r.order[j], r.order[i]
 	})
+	if r.round == 1 {
+		r.moveWhiteGuyFromFirst()
+	}
 	r.turn = 0
 	r.result = nil
 	clear(r.votes)
 	r.voteCandidates = []string{}
 	r.beginStage(PhaseClue)
+}
+
+func (r *Room) moveWhiteGuyFromFirst() {
+	if len(r.order) < 2 || r.find(r.order[0]).Role != RoleWhiteGuy {
+		return
+	}
+	index := 1 + mathrand.IntN(len(r.order)-1)
+	r.order[0], r.order[index] = r.order[index], r.order[0]
 }
 
 func (r *Room) clue(p *player, text string) error {
@@ -437,8 +473,54 @@ func (r *Room) resolveVote() {
 	} else {
 		r.result.TiedIDs = leaders
 	}
+	if r.result.Role != nil && *r.result.Role == RoleWhiteGuy {
+		r.beginStage(PhaseGuess)
+		return
+	}
 	r.beginStage(PhaseResult)
 	r.checkWinner()
+}
+
+func (r *Room) guess(p *player, text string) error {
+	if err := r.requirePhase(PhaseGuess); err != nil {
+		return err
+	}
+	if r.result.EliminatedID == nil || p.ID != *r.result.EliminatedID {
+		return invalid(MessageIDNotGuessingPlayer, nil)
+	}
+	text, err := cleanText(text, 80)
+	if err != nil {
+		return err
+	}
+	correct := strings.EqualFold(text, r.words.Civilian)
+	r.result.Guess = &GuessResult{Text: text, Correct: correct}
+	if correct {
+		winner := TeamWhiteGuy
+		r.winner = &winner
+		r.beginStage(PhaseFinished)
+		return nil
+	}
+	r.resolveAbandonedGuess()
+	return nil
+}
+
+func (r *Room) skipGuess(id string) error {
+	if err := r.requireHostPhase(id, PhaseGuess); err != nil {
+		return err
+	}
+	guesser := r.find(*r.result.EliminatedID)
+	if guesser.Connected {
+		return invalid(MessageIDGuesserStillConnected, nil)
+	}
+	r.resolveAbandonedGuess()
+	return nil
+}
+
+func (r *Room) resolveAbandonedGuess() {
+	r.checkWinner()
+	if r.winner == nil {
+		r.beginStage(PhaseResult)
+	}
 }
 
 func (r *Room) next(id string) error {
@@ -460,19 +542,28 @@ func (r *Room) next(id string) error {
 }
 
 func (r *Room) checkWinner() {
-	undercovers, civilians := 0, 0
+	undercovers, whiteGuys, civilians := 0, 0, 0
 	for _, p := range r.alivePlayers() {
-		if p.Role == RoleUndercover {
+		switch p.Role {
+		case RoleUndercover:
 			undercovers++
-		} else {
+		case RoleWhiteGuy:
+			whiteGuys++
+		case RoleCivilian:
 			civilians++
 		}
 	}
-	if undercovers == 0 {
-		winner := RoleCivilian
+	infiltrators := undercovers + whiteGuys
+	if infiltrators == 0 {
+		winner := TeamCivilian
 		r.winner = &winner
-	} else if undercovers >= civilians {
-		winner := RoleUndercover
+	} else if infiltrators >= civilians {
+		winner := TeamInfiltrators
+		if whiteGuys == 0 {
+			winner = TeamUndercover
+		} else if undercovers == 0 {
+			winner = TeamWhiteGuy
+		}
 		r.winner = &winner
 	}
 	if r.winner != nil {

@@ -8,6 +8,7 @@ const (
 	PhaseClue     Phase = "clue"
 	PhaseVote     Phase = "vote"
 	PhaseResult   Phase = "result"
+	PhaseGuess    Phase = "guess"
 	PhaseFinished Phase = "finished"
 )
 
@@ -16,6 +17,16 @@ type Role string
 const (
 	RoleCivilian   Role = "civilian"
 	RoleUndercover Role = "undercover"
+	RoleWhiteGuy   Role = "whiteGuy"
+)
+
+type WinningTeam string
+
+const (
+	TeamCivilian     WinningTeam = "civilian"
+	TeamUndercover   WinningTeam = "undercover"
+	TeamWhiteGuy     WinningTeam = "whiteGuy"
+	TeamInfiltrators WinningTeam = "infiltrators"
 )
 
 type Category string
@@ -41,6 +52,8 @@ const (
 	ActionSkip       ActionType = "skip"
 	ActionVote       ActionType = "vote"
 	ActionFinishVote ActionType = "finishVote"
+	ActionGuess      ActionType = "guess"
+	ActionSkipGuess  ActionType = "skipGuess"
 	ActionNext       ActionType = "next"
 	ActionRematch    ActionType = "rematch"
 	ActionRemove     ActionType = "remove"

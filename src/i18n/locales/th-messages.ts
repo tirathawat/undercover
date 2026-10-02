@@ -9,6 +9,11 @@ export const thMessages = {
   HOST_REQUIRED: 'เฉพาะเจ้าของห้องเท่านั้น',
   ACTION_NOT_ALLOWED_IN_PHASE: 'คำสั่งนี้ใช้ในช่วงนี้ไม่ได้',
   UNDERCOVER_COUNT_OUT_OF_RANGE: 'เลือก Undercover ได้ 1–3 คน',
+  WHITE_GUY_COUNT_OUT_OF_RANGE: 'เลือก White Guy ได้ 0–1 คน',
+  WHITE_GUY_TEAM_BALANCE_INVALID:
+    'ต้องมีผู้เล่นอย่างน้อย {{min}} คน เพื่อให้พลเมืองมากกว่า Undercover และ White Guy รวมกัน',
+  NOT_GUESSING_PLAYER: 'เฉพาะ White Guy ที่ถูกโหวตออกเท่านั้นที่ทายได้',
+  GUESSER_STILL_CONNECTED: 'ผู้เล่นยังออนไลน์ ให้เขาทายเอง',
   TEAM_BALANCE_INVALID: 'ฝ่ายพลเมืองต้องมากกว่า Undercover',
   SETTINGS_REQUIRED: 'ไม่มีการตั้งค่า',
   CATEGORY_INVALID: 'หมวดคำไม่ถูกต้อง',

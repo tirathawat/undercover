@@ -223,7 +223,8 @@
 .category-grid button:disabled {
   cursor: default;
 }
-.undercover-setting {
+.undercover-setting,
+.white-guy-setting {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -231,14 +232,36 @@
   gap: var(--md-sys-space-2);
   margin-block-start: var(--md-sys-space-6);
 }
-.undercover-setting strong {
+.undercover-setting strong,
+.white-guy-setting strong {
   font-size: 16px;
   font-weight: 500;
 }
 .undercover-setting p,
+.white-guy-setting p,
 .settings-note {
   color: var(--md-sys-color-on-surface-variant);
   font-size: var(--md-sys-typescale-label-medium-size);
+}
+.white-guy-setting {
+  padding-block-start: var(--md-sys-space-4);
+  border-block-start: 1px solid var(--md-sys-color-outline-variant);
+}
+.setting-toggle {
+  min-width: 88px;
+  min-height: var(--md-sys-control-height);
+  padding: var(--md-sys-space-2) var(--md-sys-space-4);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-full);
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-body-medium-size);
+  font-weight: 500;
+}
+.setting-toggle[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
 }
 .settings-note {
   margin-block-start: var(--md-sys-space-4);

@@ -71,7 +71,7 @@ function room(overrides: Partial<RoomView> = {}): RoomView {
     phase: 'lobby',
     game: 0,
     round: 0,
-    settings: { category: 'food', undercovers: 1 },
+    settings: { category: 'food', undercovers: 1, whiteGuys: 0 },
     players: ['a', 'b', 'c'].map((id, avatar) => ({
       id,
       name: id,
@@ -157,7 +157,10 @@ test('starting requires a connected civilian majority and host permission', () =
   });
   view.rerender(
     <Stage
-      room={{ ...current, settings: { category: 'food', undercovers: 2 } }}
+      room={{
+        ...current,
+        settings: { category: 'food', undercovers: 2, whiteGuys: 0 },
+      }}
       disabled={false}
       send={send}
     />,
@@ -188,6 +191,31 @@ test('starting requires a connected civilian majority and host permission', () =
   );
   expect(screen.queryByRole('button', { name: 'เริ่มเกม' })).toBeNull();
 });
+
+test.each([
+  { undercovers: 1, whiteGuys: 0, minimum: 3, usesDefaultCopy: true },
+  { undercovers: 2, whiteGuys: 0, minimum: 5, usesDefaultCopy: false },
+  { undercovers: 3, whiteGuys: 0, minimum: 7, usesDefaultCopy: false },
+  { undercovers: 1, whiteGuys: 1, minimum: 5, usesDefaultCopy: false },
+  { undercovers: 2, whiteGuys: 1, minimum: 7, usesDefaultCopy: false },
+  { undercovers: 3, whiteGuys: 1, minimum: 9, usesDefaultCopy: false },
+])(
+  'lobby shows the $minimum-player minimum for $undercovers Undercover and $whiteGuys White Guy',
+  ({ undercovers, whiteGuys, minimum, usesDefaultCopy }) => {
+    const current = room({
+      settings: { category: 'food', undercovers, whiteGuys },
+    });
+    render(<Stage room={current} disabled={false} send={vi.fn()} />);
+
+    expect(
+      screen.getByText(
+        usesDefaultCopy
+          ? `${current.players.length} คนในห้อง · เล่นได้ตั้งแต่ 3 คน`
+          : `${current.players.length} คนในห้อง · เกมนี้เริ่มได้ตั้งแต่ ${minimum} คน`,
+      ),
+    ).toBeTruthy();
+  },
+);
 
 test('a failed clue retains its draft and a successful retry clears it', async () => {
   const send = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
@@ -277,6 +305,26 @@ test('runoff voting excludes self and confirms only a selected finalist', () => 
     screen.queryByRole('group', { name: 'เลือกผู้เล่นที่สงสัย' }),
   ).toBeNull();
   expect(screen.getByText('โหวตแล้ว รอเพื่อนที่เหลือ')).toBeTruthy();
+});
+
+test('White Guy voting asks players to identify either hidden role', () => {
+  render(
+    <Stage
+      room={room({
+        phase: 'vote',
+        game: 1,
+        round: 1,
+        settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+        voteCandidates: ['a', 'b', 'c'],
+      })}
+      disabled={false}
+      send={vi.fn()}
+    />,
+  );
+
+  expect(
+    screen.getByText(/แล้วเลือกคนที่คิดว่าเป็น Undercover หรือ White Guy/),
+  ).toBeTruthy();
 });
 
 test('disconnected players let the host request vote completion', () => {
@@ -385,6 +433,431 @@ test('only the host advances results and opens a rematch', () => {
   expect(screen.queryByRole('button', { name: 'เล่นอีกเกม' })).toBeNull();
 });
 
+test('White Guy settings require a civilian majority before starting', () => {
+  const current = room({
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+  });
+  const send = vi.fn();
+  const view = render(<Stage room={current} disabled={false} send={send} />);
+
+  expect(
+    screen.getByRole<HTMLButtonElement>('button', { name: 'เริ่มเกม' })
+      .disabled,
+  ).toBe(true);
+  expect(
+    screen.getByText('ต้องมีอย่างน้อย 5 คน เพื่อให้พลเมืองมากกว่าอีกสองฝ่าย'),
+  ).toBeTruthy();
+
+  view.rerender(
+    <Stage
+      room={{
+        ...current,
+        players: ['a', 'b', 'c', 'd', 'e'].map((id, avatar) => ({
+          id,
+          name: id,
+          avatar,
+          connected: true,
+          alive: true,
+          ready: false,
+        })),
+      }}
+      disabled={false}
+      send={send}
+    />,
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'เริ่มเกม' }));
+  expect(send).toHaveBeenCalledWith({
+    type: 'start',
+    stageId: current.stageId,
+  });
+});
+
+test('host can opt in to one White Guy before enough players join', () => {
+  const current = room();
+  const send = vi.fn();
+  const view = render(<People room={current} disabled={false} send={send} />);
+
+  fireEvent.click(screen.getByRole('button', { name: 'เปิด White Guy' }));
+  expect(send).toHaveBeenLastCalledWith({
+    type: 'settings',
+    stageId: current.stageId,
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+  });
+
+  view.rerender(
+    <People
+      room={{
+        ...current,
+        settings: { ...current.settings, whiteGuys: 1 },
+      }}
+      disabled={false}
+      send={send}
+    />,
+  );
+  expect(
+    screen
+      .getByRole('button', { name: 'เปิด White Guy' })
+      .getAttribute('aria-pressed'),
+  ).toBe('true');
+  expect(screen.getByText('เกมนี้ต้องมีอย่างน้อย 5 คน')).toBeTruthy();
+});
+
+test('host can turn White Guy off while fewer than three players are waiting', () => {
+  const current = room({
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+    players: room().players.slice(0, 1),
+  });
+  const send = vi.fn();
+  render(<People room={current} disabled={false} send={send} />);
+  const toggle = screen.getByRole<HTMLButtonElement>('button', {
+    name: 'เปิด White Guy',
+  });
+
+  expect(toggle.disabled).toBe(false);
+  fireEvent.click(toggle);
+  expect(send).toHaveBeenCalledWith({
+    type: 'settings',
+    stageId: current.stageId,
+    settings: { category: 'food', undercovers: 1, whiteGuys: 0 },
+  });
+});
+
+test('only the eliminated White Guy can review and submit one final guess', async () => {
+  const current = room({
+    phase: 'guess',
+    game: 1,
+    round: 1,
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+    self: { id: 'b', word: null, hasVoted: true, role: 'whiteGuy' },
+    players: room().players.map((player) => ({
+      ...player,
+      alive: player.id !== 'b',
+      role: player.id === 'b' ? 'whiteGuy' : undefined,
+    })),
+    result: {
+      eliminatedId: 'b',
+      role: 'whiteGuy',
+      counts: { b: 2 },
+      tiedIds: [],
+    },
+  });
+  const send = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+  const view = render(<Stage room={current} disabled={false} send={send} />);
+  const input = screen.getByRole<HTMLInputElement>('textbox', {
+    name: 'ทายคำลับของพลเมือง',
+  });
+  const review = screen.getByRole<HTMLButtonElement>('button', {
+    name: 'ตรวจคำตอบก่อนส่ง',
+  });
+
+  fireEvent.change(input, { target: { value: '   ' } });
+  expect(review.disabled).toBe(true);
+  fireEvent.change(input, { target: { value: ' หมูกระทะ ' } });
+  fireEvent.click(review);
+  expect(screen.getByText('“หมูกระทะ”')).toBeTruthy();
+  expect(document.activeElement).toBe(
+    screen.getByRole('button', { name: 'ยืนยันคำตอบสุดท้าย' }),
+  );
+  expect(send).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('button', { name: 'กลับไปแก้' }));
+  const editedInput = screen.getByRole<HTMLInputElement>('textbox', {
+    name: 'ทายคำลับของพลเมือง',
+  });
+  expect(document.activeElement).toBe(editedInput);
+  fireEvent.click(screen.getByRole('button', { name: 'ตรวจคำตอบก่อนส่ง' }));
+
+  fireEvent.click(screen.getByRole('button', { name: 'ยืนยันคำตอบสุดท้าย' }));
+  await waitFor(() => expect(send).toHaveBeenCalledTimes(1));
+  expect(screen.getByText('“หมูกระทะ”')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'ยืนยันคำตอบสุดท้าย' }));
+  await waitFor(() => expect(send).toHaveBeenCalledTimes(2));
+  expect(send).toHaveBeenLastCalledWith({
+    type: 'guess',
+    stageId: current.stageId,
+    text: 'หมูกระทะ',
+  });
+  expect(
+    screen.queryByRole('button', { name: 'ยืนยันคำตอบสุดท้าย' }),
+  ).toBeNull();
+
+  view.rerender(
+    <Stage
+      room={{ ...current, self: { ...current.self, id: 'a' } }}
+      disabled={false}
+      send={send}
+    />,
+  );
+  expect(
+    screen.queryByRole('textbox', { name: 'ทายคำลับของพลเมือง' }),
+  ).toBeNull();
+  expect(screen.getByText('รอ White Guy ส่งคำตอบสุดท้าย')).toBeTruthy();
+});
+
+test('a pending White Guy guess cannot be submitted twice', async () => {
+  let finishRequest: (sent: boolean) => void = () => undefined;
+  const send = vi.fn().mockReturnValue(
+    new Promise<boolean>((resolve) => {
+      finishRequest = resolve;
+    }),
+  );
+  const current = room({
+    phase: 'guess',
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+    self: { id: 'b', word: null, hasVoted: true, role: 'whiteGuy' },
+    players: room().players.map((player) => ({
+      ...player,
+      alive: player.id !== 'b',
+      role: player.id === 'b' ? 'whiteGuy' : undefined,
+    })),
+    result: {
+      eliminatedId: 'b',
+      role: 'whiteGuy',
+      counts: { b: 2 },
+      tiedIds: [],
+    },
+  });
+  render(<Stage room={current} disabled={false} send={send} />);
+  fireEvent.change(
+    screen.getByRole('textbox', { name: 'ทายคำลับของพลเมือง' }),
+    { target: { value: 'หมูกระทะ' } },
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'ตรวจคำตอบก่อนส่ง' }));
+  const confirm = screen.getByRole<HTMLButtonElement>('button', {
+    name: 'ยืนยันคำตอบสุดท้าย',
+  });
+
+  fireEvent.click(confirm);
+  fireEvent.click(confirm);
+  expect(send).toHaveBeenCalledOnce();
+  finishRequest(false);
+  await waitFor(() => expect(confirm.disabled).toBe(false));
+});
+
+test('host confirms skipping only a disconnected White Guy guesser', () => {
+  const base = room({
+    phase: 'guess',
+    game: 1,
+    round: 1,
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+    result: {
+      eliminatedId: 'b',
+      role: 'whiteGuy',
+      counts: { b: 2 },
+      tiedIds: [],
+    },
+  });
+  const current = {
+    ...base,
+    players: base.players.map((player) => ({
+      ...player,
+      alive: player.id !== 'b',
+      connected: player.id !== 'b',
+      role: player.id === 'b' ? ('whiteGuy' as const) : undefined,
+    })),
+  };
+  const send = vi.fn();
+  const view = render(<Stage room={current} disabled={false} send={send} />);
+
+  fireEvent.click(screen.getByRole('button', { name: 'ข้ามการทายคำ' }));
+  expect(send).not.toHaveBeenCalled();
+  expect(document.activeElement).toBe(
+    screen.getByRole('button', { name: 'ยืนยันข้ามการทายคำ' }),
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'ยืนยันข้ามการทายคำ' }));
+  expect(send).toHaveBeenCalledWith({
+    type: 'skipGuess',
+    stageId: current.stageId,
+  });
+
+  view.rerender(
+    <Stage
+      room={{
+        ...current,
+        players: current.players.map((player) => ({
+          ...player,
+          connected: true,
+        })),
+      }}
+      disabled={false}
+      send={send}
+    />,
+  );
+  expect(screen.queryByRole('button', { name: 'ข้ามการทายคำ' })).toBeNull();
+});
+
+test('a reconnected White Guy clears an armed skip confirmation', () => {
+  const base = room({
+    phase: 'guess',
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+    result: {
+      eliminatedId: 'b',
+      role: 'whiteGuy',
+      counts: { b: 2 },
+      tiedIds: [],
+    },
+  });
+  const disconnected = {
+    ...base,
+    players: base.players.map((player) => ({
+      ...player,
+      alive: player.id !== 'b',
+      connected: player.id !== 'b',
+      role: player.id === 'b' ? ('whiteGuy' as const) : undefined,
+    })),
+  };
+  const view = render(
+    <Stage room={disconnected} disabled={false} send={vi.fn()} />,
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'ข้ามการทายคำ' }));
+
+  view.rerender(
+    <Stage
+      room={{
+        ...disconnected,
+        players: disconnected.players.map((player) => ({
+          ...player,
+          connected: true,
+        })),
+      }}
+      disabled={false}
+      send={vi.fn()}
+    />,
+  );
+  expect(
+    screen.queryByRole('button', { name: 'ยืนยันข้ามการทายคำ' }),
+  ).toBeNull();
+  expect(document.activeElement).toBe(
+    screen.getByRole('heading', { name: 'White Guy กำลังทายคำ' }),
+  );
+
+  view.rerender(<Stage room={disconnected} disabled={false} send={vi.fn()} />);
+  expect(screen.getByRole('button', { name: 'ข้ามการทายคำ' })).toBeTruthy();
+  expect(
+    screen.queryByRole('button', { name: 'ยืนยันข้ามการทายคำ' }),
+  ).toBeNull();
+});
+
+test('host can remove a disconnected White Guy guesser after elimination', () => {
+  const current = room({
+    phase: 'guess',
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+    players: room().players.map((player) => ({
+      ...player,
+      alive: player.id === 'a',
+      connected: player.id === 'a',
+      role: player.id === 'b' ? 'whiteGuy' : undefined,
+    })),
+    result: {
+      eliminatedId: 'b',
+      role: 'whiteGuy',
+      counts: { b: 2 },
+      tiedIds: [],
+    },
+  });
+  render(<People room={current} disabled={false} send={vi.fn()} />);
+
+  expect(screen.getByRole('button', { name: 'นำ b ออก' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'นำ c ออก' })).toBeNull();
+});
+
+test('dead disconnected players remain in ordinary game results', () => {
+  const current = room({
+    phase: 'result',
+    players: room().players.map((player) => ({
+      ...player,
+      alive: player.id !== 'b',
+      connected: player.id !== 'b',
+    })),
+  });
+  render(<People room={current} disabled={false} send={vi.fn()} />);
+
+  expect(screen.queryByRole('button', { name: 'นำ b ออก' })).toBeNull();
+});
+
+test('White Guy roles and final guesses are shown in public results', () => {
+  const current = room({
+    phase: 'result',
+    game: 1,
+    round: 1,
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+    players: room().players.map((player) => ({
+      ...player,
+      alive: player.id !== 'b',
+      role: player.id === 'b' ? 'whiteGuy' : undefined,
+    })),
+    result: {
+      eliminatedId: 'b',
+      role: 'whiteGuy',
+      counts: { b: 2 },
+      tiedIds: [],
+      guess: { text: 'ชาบู', correct: false },
+    },
+  });
+  const view = render(<Stage room={current} disabled={false} send={vi.fn()} />);
+  expect(screen.getByText('เป็น White Guy')).toBeTruthy();
+  expect(screen.getByText('ทายว่า “ชาบู” — ไม่ถูกต้อง')).toBeTruthy();
+
+  view.rerender(
+    <Stage
+      room={{
+        ...current,
+        phase: 'finished',
+        winner: 'infiltrators',
+        words: { civilian: 'หมูกระทะ', undercover: 'ชาบู' },
+      }}
+      disabled={false}
+      send={vi.fn()}
+    />,
+  );
+  expect(screen.getByRole('heading', { name: 'ทีมแฝงตัวชนะ' })).toBeTruthy();
+  expect(screen.getByText('คำตอบสุดท้าย: “ชาบู” — ไม่ถูกต้อง')).toBeTruthy();
+});
+
+test('White Guy winner copy distinguishes a correct guess from survival', () => {
+  const current = room({
+    phase: 'finished',
+    game: 1,
+    round: 1,
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+    winner: 'whiteGuy',
+    words: { civilian: 'หมูกระทะ', undercover: 'ชาบู' },
+    result: {
+      eliminatedId: 'b',
+      role: 'whiteGuy',
+      counts: { b: 2 },
+      tiedIds: [],
+      guess: { text: 'หมูกระทะ', correct: true },
+    },
+  });
+  const view = render(<Stage room={current} disabled={false} send={vi.fn()} />);
+  expect(
+    screen.getByText('ทายคำลับของพลเมืองได้ถูกต้องและชนะเกมนี้คนเดียว'),
+  ).toBeTruthy();
+
+  view.rerender(
+    <Stage
+      room={{
+        ...current,
+        result: {
+          eliminatedId: 'c',
+          role: 'civilian',
+          counts: { c: 2 },
+          tiedIds: [],
+        },
+      }}
+      disabled={false}
+      send={vi.fn()}
+    />,
+  );
+  expect(
+    screen.getByText('White Guy อยู่รอดจนมีจำนวนไม่น้อยกว่าพลเมือง'),
+  ).toBeTruthy();
+  expect(
+    screen.queryByText('ทายคำลับของพลเมืองได้ถูกต้องและชนะเกมนี้คนเดียว'),
+  ).toBeNull();
+});
+
 test('settings preserve other values and participants cannot change them', () => {
   const current = room();
   const send = vi.fn();
@@ -393,7 +866,7 @@ test('settings preserve other values and participants cannot change them', () =>
   expect(send).toHaveBeenCalledWith({
     type: 'settings',
     stageId: current.stageId,
-    settings: { category: 'places', undercovers: 1 },
+    settings: { category: 'places', undercovers: 1, whiteGuys: 0 },
   });
   expect(
     screen.getByRole<HTMLButtonElement>('button', {

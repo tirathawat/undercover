@@ -2,28 +2,33 @@ import { Users } from 'lucide-react';
 import { Button } from '../../../design-system/Button';
 import { Avatar } from '../../../game/Avatar';
 import { useTranslation } from '../../../i18n';
+import { minimumPlayers } from '../room-rules';
 import type { StageProps } from './stage-props';
 
 export function LobbyStage({ room, disabled, send }: StageProps) {
   const { t } = useTranslation();
   const isHost = room.hostId === room.self.id;
+  const requiredPlayers = minimumPlayers(room.settings);
   const canStart =
-    room.players.length >= 3 &&
-    room.players.every((player) => player.connected) &&
-    room.settings.undercovers * 2 < room.players.length;
+    room.players.length >= requiredPlayers &&
+    room.players.every((player) => player.connected);
   return (
     <section className="stage-panel lobby-stage">
       <span className="stage-symbol">
         <Users size={36} strokeWidth={1.5} aria-hidden="true" />
       </span>
       <h2 tabIndex={-1}>
-        {room.players.length < 3
+        {room.players.length < requiredPlayers
           ? t('lobby.inviteTitle')
           : t('lobby.readyTitle')}
       </h2>
       <p>
-        {room.players.length < 3
-          ? t('lobby.missingPlayers', { count: 3 - room.players.length })
+        {room.players.length < requiredPlayers
+          ? room.settings.whiteGuys
+            ? t('lobby.whiteGuyMinimum', { count: requiredPlayers })
+            : t('lobby.missingPlayers', {
+                count: requiredPlayers - room.players.length,
+              })
           : t('lobby.readyDescription')}
       </p>
       <div className="lobby-avatars">
@@ -32,7 +37,12 @@ export function LobbyStage({ room, disabled, send }: StageProps) {
         ))}
       </div>
       <span className="stage-footnote">
-        {t('lobby.playerCount', { count: room.players.length })}
+        {requiredPlayers > 3
+          ? t('lobby.playerCountWithMinimum', {
+              count: room.players.length,
+              minimum: requiredPlayers,
+            })
+          : t('lobby.playerCount', { count: room.players.length })}
       </span>
       {isHost ? (
         <Button
@@ -45,13 +55,13 @@ export function LobbyStage({ room, disabled, send }: StageProps) {
       ) : (
         <span className="waiting-label">{t('lobby.waiting')}</span>
       )}
-      {!canStart && room.players.length >= 3 && (
+      {!canStart && room.players.length >= requiredPlayers && (
         <p className="stage-footnote">
           {room.players.some((player) => !player.connected)
             ? isHost
               ? t('lobby.hostDisconnected')
               : t('lobby.participantDisconnected')
-            : t('lobby.civilianMajority')}
+            : t('lobby.civilianMajority', { count: requiredPlayers })}
         </p>
       )}
     </section>

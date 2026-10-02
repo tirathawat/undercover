@@ -62,12 +62,14 @@ Run a single instance behind an HTTPS reverse proxy that supports WebSocket upgr
 
 ## Game rules
 
-- Start with at least three connected players. Choose one to three Undercover players; civilians must outnumber them at the start. There is no per-room player cap, but server connection limits still apply.
-- Players see only their own word and do not know their team. Eliminated players' roles become public; both words and all remaining roles are revealed when the game ends.
+- Start with at least three connected players. Choose one to three Undercover players and optionally one White Guy. Civilians must outnumber Undercover and White Guy combined at the start; one of each needs at least five players. White Guy is off by default. There is no per-room player cap, but server connection limits still apply.
+- Civilians and Undercover see only their own word and do not know their team. White Guy receives no word and privately learns their role. They listen to clues and improvise, and never start the first clue round. Eliminated players' roles become public; both words and all remaining roles are revealed when the game ends.
 - Players take turns submitting one clue. History can be filtered by game, round and player, and stays across rematches in the same room.
 - Living players vote once, cannot vote for themselves and cannot change a vote. Votes stay private until voting resolves. The host can finish voting once every connected living player has voted.
 - The highest vote count eliminates a player. A tie eliminates nobody and leads to a runoff among the tied candidates. The host advances from the result to the next vote or round.
-- Civilians win when no Undercover players remain. Undercover wins when its remaining players equal or outnumber the civilians.
+- When White Guy is voted out, play pauses for one guess at the civilian word. A correct guess gives White Guy the sole win. A wrong guess eliminates them and resumes the normal result or ends the game if another winning condition is met. Answers match the exact word, ignoring surrounding whitespace and letter case; synonyms and spelling variants do not match.
+- During the guess, both words remain private. White Guy can recover with their PIN and finish the guess after disconnecting. The host can confirm skipping only if the guesser is disconnected. Leaving or being removed forfeits the guess; disconnecting alone does not.
+- Civilians win when no Undercover or White Guy players remain. The surviving Undercover and White Guy win together when their combined number equals or outnumbers civilians. A lone surviving faction wins for itself. A correct White Guy guess takes precedence over these conditions.
 - New players join only in the lobby. If the host disconnects, ownership passes to a connected player.
 
 ## Rejoining a room

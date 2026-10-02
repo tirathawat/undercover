@@ -30,7 +30,14 @@ export function VoteStage({ room, disabled, send }: StageProps) {
         {room.result?.tiedIds.length ? t('vote.runoffTitle') : t('vote.title')}
       </h2>
       <p>
-        <Trans i18nKey="vote.description" components={{ br: <br /> }} />
+        <Trans
+          i18nKey={
+            room.settings.whiteGuys
+              ? 'vote.descriptionWithWhiteGuy'
+              : 'vote.description'
+          }
+          components={{ br: <br /> }}
+        />
       </p>
       <div className="vote-progress">
         {t('vote.progress', { votes: room.voteCount, count: alive.length })}

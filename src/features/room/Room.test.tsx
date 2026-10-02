@@ -13,7 +13,7 @@ function revealingRoom(): RoomView {
     phase: 'reveal',
     game: 1,
     round: 0,
-    settings: { category: 'food', undercovers: 1 },
+    settings: { category: 'food', undercovers: 1, whiteGuys: 0 },
     players: ['a', 'b', 'c'].map((id, avatar) => ({
       id,
       name: id,
@@ -97,6 +97,45 @@ test('switching away from the browser conceals the word', () => {
   expect(screen.queryByText('หมูกระทะ')).toBeNull();
 });
 
+test('White Guy and word players share the same concealed private-information UI', () => {
+  const room = {
+    ...revealingRoom(),
+    settings: { category: 'food' as const, undercovers: 1, whiteGuys: 1 },
+    self: {
+      ...revealingRoom().self,
+      word: null,
+      role: 'whiteGuy' as const,
+    },
+  };
+  render(<Room room={room} disabled={false} send={vi.fn()} />);
+
+  expect(screen.queryByText('คุณคือ White Guy')).toBeNull();
+  expect(
+    screen.getByRole('heading', { name: 'ดูข้อมูลลับ แล้วเก็บไว้ในใจ' }),
+  ).toBeTruthy();
+  expect(screen.getByText('ข้อมูลลับของคุณ')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'ดูข้อมูลลับ' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'ดูข้อมูลลับ' }));
+  expect(screen.getByText('คุณคือ White Guy')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'ซ่อนข้อมูลลับ' }));
+  expect(screen.queryByText('คุณคือ White Guy')).toBeNull();
+
+  cleanup();
+  render(
+    <Room
+      room={{
+        ...room,
+        self: { id: 'a', word: 'หมูกระทะ', hasVoted: false },
+      }}
+      disabled={false}
+      send={vi.fn()}
+    />,
+  );
+  expect(screen.getByText('ข้อมูลลับของคุณ')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'ดูข้อมูลลับ' })).toBeTruthy();
+  expect(screen.queryByText('คำลับของคุณ')).toBeNull();
+});
+
 test('removing a future speaker preserves the current clue draft and focus', () => {
   const room: RoomView = {
     ...revealingRoom(),
@@ -129,4 +168,44 @@ test('removing a future speaker preserves the current clue draft and focus', () 
   expect(screen.getByRole('textbox', { name: 'คำใบ้ของคุณ' })).toBe(input);
   expect((input as HTMLInputElement).value).toBe('คำใบ้ที่กำลังพิมพ์');
   expect(document.activeElement).toBe(input);
+});
+
+test('a White Guy guess draft survives navigation and becoming offline', () => {
+  const room: RoomView = {
+    ...revealingRoom(),
+    phase: 'guess',
+    stageId: 'guess-1',
+    settings: { category: 'food', undercovers: 1, whiteGuys: 1 },
+    self: {
+      id: 'a',
+      word: null,
+      hasVoted: true,
+      role: 'whiteGuy',
+    },
+    players: revealingRoom().players.map((player) => ({
+      ...player,
+      alive: player.id !== 'a',
+      role: player.id === 'a' ? 'whiteGuy' : undefined,
+    })),
+    result: {
+      eliminatedId: 'a',
+      role: 'whiteGuy',
+      counts: { a: 2 },
+      tiedIds: [],
+    },
+  };
+  const view = render(<Room room={room} disabled={false} send={vi.fn()} />);
+  fireEvent.change(
+    screen.getByRole('textbox', { name: 'ทายคำลับของพลเมือง' }),
+    { target: { value: 'หมูกระทะ' } },
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'คำใบ้' }));
+  view.rerender(<Room room={room} disabled send={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: 'เกม' }));
+
+  const input = screen.getByRole<HTMLInputElement>('textbox', {
+    name: 'ทายคำลับของพลเมือง',
+  });
+  expect(input.value).toBe('หมูกระทะ');
+  expect(input.disabled).toBe(true);
 });

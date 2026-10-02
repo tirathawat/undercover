@@ -250,6 +250,8 @@ func (r *Room) remove(id string) {
 }
 
 func (r *Room) removeActivePlayer(p *player) {
+	wasPendingGuesser := r.phase == PhaseGuess && r.result != nil &&
+		r.result.EliminatedID != nil && *r.result.EliminatedID == p.ID
 	p.Alive = false
 	p.Connected = false
 	delete(r.votes, p.ID)
@@ -261,6 +263,12 @@ func (r *Room) removeActivePlayer(p *player) {
 	r.voteCandidates = slices.DeleteFunc(r.voteCandidates, func(candidate string) bool {
 		return candidate == p.ID
 	})
+	if r.phase == PhaseGuess {
+		if wasPendingGuesser {
+			r.resolveAbandonedGuess()
+		}
+		return
+	}
 	r.checkWinner()
 	r.advanceAfterRemoval(p.ID)
 }

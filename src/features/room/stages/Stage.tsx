@@ -1,6 +1,7 @@
 import type { StageProps } from './stage-props';
 import { ClueStage } from './ClueStage';
 import { FinishedStage } from './FinishedStage';
+import { GuessStage } from './GuessStage';
 import { LobbyStage } from './LobbyStage';
 import { ResultStage } from './ResultStage';
 import { RevealStage } from './RevealStage';
@@ -18,6 +19,8 @@ export function Stage(props: StageProps) {
       return <ClueStage {...props} />;
     case 'vote':
       return <VoteStage {...props} />;
+    case 'guess':
+      return <GuessStage {...props} />;
     case 'result':
       return <ResultStage {...props} />;
     case 'finished':
