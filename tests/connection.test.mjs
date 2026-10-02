@@ -245,6 +245,109 @@ test('disconnect settles an action and reconnect resumes the same seat', async (
   assert.equal(connection.getSnapshot().restoring, false);
 });
 
+test('legacy state before resume acknowledgement clears the prior disconnect error', async (t) => {
+  const { connection, socket } = await connect(t);
+  socket.open();
+  const joining = connection.send({
+    type: 'create',
+    name: 'Player',
+    avatar: 0,
+    pin: '012345',
+  });
+  socket.receive({
+    type: 'reply',
+    id: socket.messages[0].id,
+    reply: { ok: true, session, room },
+  });
+  assert.equal(await joining, true);
+
+  const pending = connection.send({ type: 'start', stageId: room.stageId });
+  socket.disconnect();
+  assert.equal(await pending, false);
+  assert.equal(connection.getSnapshot().error?.messageId, 'CONNECTION_DROPPED');
+
+  t.mock.timers.tick(500);
+  const restored = FakeWebSocket.instances.at(-1);
+  restored.open();
+  restored.receive({ type: 'state', room });
+  restored.receive({
+    type: 'reply',
+    id: restored.messages[0].id,
+    reply: { ok: true },
+  });
+  await Promise.resolve();
+
+  assert.equal(connection.getSnapshot().room.code, session.code);
+  assert.equal(connection.getSnapshot().restoring, false);
+  assert.equal(connection.getSnapshot().error, null);
+});
+
+test('an acknowledged legacy resume reconnects when its state never arrives', async (t) => {
+  const { connection, socket, values } = await connect(t, session);
+  socket.open();
+  socket.receive({
+    type: 'reply',
+    id: socket.messages[0].id,
+    reply: { ok: true },
+  });
+  await Promise.resolve();
+  assert.equal(connection.getSnapshot().restoring, true);
+
+  t.mock.timers.tick(6000);
+  assert.equal(connection.getSnapshot().connected, false);
+  assert.equal(connection.getSnapshot().restoring, true);
+  assert.equal(
+    connection.getSnapshot().error?.messageId,
+    'SERVER_MESSAGE_INVALID',
+  );
+  assert.equal(values.has('undercover-session'), true);
+
+  t.mock.timers.tick(500);
+  const current = FakeWebSocket.instances.at(-1);
+  assert.notEqual(current, socket);
+  current.open();
+  assert.deepEqual(current.messages[0].action, {
+    type: 'resume',
+    code: session.code,
+    token: session.token,
+  });
+});
+
+test('malformed state during restoration reconnects without revoking the saved seat', async (t) => {
+  const { connection, socket, values } = await connect(t, session);
+  socket.open();
+  socket.receive({
+    type: 'reply',
+    id: socket.messages[0].id,
+    reply: { ok: true },
+  });
+  await Promise.resolve();
+  socket.receive({ type: 'state', room: { code: session.code } });
+
+  assert.equal(connection.getSnapshot().connected, false);
+  assert.equal(connection.getSnapshot().restoring, true);
+  assert.equal(
+    connection.getSnapshot().error?.messageId,
+    'SERVER_MESSAGE_INVALID',
+  );
+  assert.equal(values.has('undercover-session'), true);
+});
+
+test('seat replacement during restoration preserves its terminal reason', async (t) => {
+  const { connection, socket, values } = await connect(t, session);
+  socket.open();
+  socket.receive({
+    type: 'removed',
+    reason: 'Seat replaced',
+    messageId: 'SEAT_REPLACED',
+  });
+  await Promise.resolve();
+
+  assert.equal(values.has('undercover-session'), false);
+  assert.equal(connection.getSnapshot().restoring, false);
+  assert.equal(connection.getSnapshot().error?.messageId, 'SEAT_REPLACED');
+});
+
 test('callbacks from a disposed socket cannot change the current connection', async (t) => {
   const { connection, socket, unsubscribe } = await connect(t);
   socket.open();
@@ -506,6 +609,58 @@ test('removal revokes the saved seat and retains the removal reason', async (t) 
   assert.equal(connection.getSnapshot().error?.fallback, 'Removed by host');
   assert.equal(values.has('undercover-session'), false);
   assert.equal(homeUrl, '/');
+});
+
+test('seat replacement settles an in-flight action and preserves its reason after reconnect', async (t) => {
+  const { connection, socket } = await connect(t, session);
+  socket.open();
+  socket.receive({
+    type: 'reply',
+    id: socket.messages[0].id,
+    reply: { ok: true, session, room },
+  });
+  await Promise.resolve();
+
+  const pending = connection.send({ type: 'start', stageId: room.stageId });
+  const request = socket.messages[1];
+  socket.receive({
+    type: 'removed',
+    reason: 'Seat replaced',
+    messageId: 'SEAT_REPLACED',
+  });
+
+  assert.equal(await pending, false);
+  assert.equal(connection.getSnapshot().pending, false);
+  assert.equal(connection.getSnapshot().error?.messageId, 'SEAT_REPLACED');
+  socket.receive({
+    type: 'reply',
+    id: request.id,
+    reply: { ok: false, code: 'SESSION', error: 'Session required' },
+  });
+  socket.disconnect();
+  t.mock.timers.tick(500);
+  const current = FakeWebSocket.instances.at(-1);
+  current.open();
+  assert.equal(connection.getSnapshot().error?.messageId, 'SEAT_REPLACED');
+});
+
+test('blank removal completes explicit leave without showing an alert', async (t) => {
+  const { connection, socket } = await connect(t, session);
+  socket.open();
+  socket.receive({
+    type: 'reply',
+    id: socket.messages[0].id,
+    reply: { ok: true, session, room },
+  });
+  await Promise.resolve();
+
+  const leaving = connection.send({ type: 'leave' });
+  socket.receive({ type: 'removed', reason: '' });
+
+  assert.equal(await leaving, true);
+  assert.equal(connection.getSnapshot().pending, false);
+  assert.equal(connection.getSnapshot().room, null);
+  assert.equal(connection.getSnapshot().error, null);
 });
 
 test('only one action is sent while another action is pending', async (t) => {

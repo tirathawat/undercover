@@ -55,6 +55,10 @@ a {
   outline: 3px solid var(--md-sys-color-primary);
   outline-offset: 3px;
 }
+h1[tabindex='-1']:focus,
+h2[tabindex='-1']:focus {
+  outline: none;
+}
 input,
 select {
   width: 100%;

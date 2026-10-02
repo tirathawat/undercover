@@ -22,7 +22,10 @@ export function App() {
   const [modal, setModal] = useState<ModalState>(null);
   const disabled = !game.connected || game.pending || game.restoring;
   const page = game.room?.code ?? (game.restoring ? 'restoring' : 'home');
+  const previousPage = useRef(page);
   useEffect(() => {
+    if (previousPage.current === page) return;
+    previousPage.current = page;
     document.querySelector<HTMLElement>('#main-content h1')?.focus();
   }, [page]);
   useEffect(() => {

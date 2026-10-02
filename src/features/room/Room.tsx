@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Copy, Gamepad2, Link, NotebookPen, Users } from 'lucide-react';
+import { Check, Copy, Gamepad2, Link, NotebookPen, Users } from 'lucide-react';
 import type { GameAction, RoomView } from '../../../shared/game';
 import { History } from './History';
 import { People } from './People';
@@ -15,6 +15,8 @@ interface Props {
   send: (action: GameAction) => Promise<boolean>;
 }
 
+const COPY_CONFIRMATION_DURATION_MS = 2_000;
+
 export function Room({ room, disabled, send }: Props) {
   const { t } = useTranslation();
   const [view, setView] = useState<'play' | 'history' | 'people'>('play');
@@ -22,24 +24,49 @@ export function Room({ room, disabled, send }: Props) {
   const [copyFallback, setCopyFallback] = useState(false);
   const layout = useRoomPanelFocus(view, room.stageId);
   const copyInput = useRef<HTMLInputElement>(null);
+  const copyAttempt = useRef(0);
+  const copyResetTimer = useRef<number>(undefined);
   useEffect(() => {
     if (copyFallback) {
       copyInput.current?.focus();
       copyInput.current?.select();
     }
   }, [copyFallback]);
+  useEffect(
+    () => () => {
+      copyAttempt.current += 1;
+      window.clearTimeout(copyResetTimer.current);
+    },
+    [],
+  );
   const phaseLabel = t(`room.phases.${room.phase}`);
   const shareUrl = `${window.location.origin}/?room=${room.code}`;
   const speaker = room.players.find((player) => player.id === room.speakerId);
 
   async function copyLink() {
+    const attempt = ++copyAttempt.current;
+    window.clearTimeout(copyResetTimer.current);
+    copyResetTimer.current = undefined;
+    setCopied(false);
+
     try {
       await navigator.clipboard.writeText(shareUrl);
+      if (attempt !== copyAttempt.current) return;
       setCopied(true);
       setCopyFallback(false);
+      copyResetTimer.current = window.setTimeout(() => {
+        if (attempt === copyAttempt.current) setCopied(false);
+        copyResetTimer.current = undefined;
+      }, COPY_CONFIRMATION_DURATION_MS);
     } catch {
+      if (attempt !== copyAttempt.current) return;
       setCopied(false);
       setCopyFallback(true);
+      const fallbackInput = copyInput.current;
+      if (fallbackInput?.isConnected) {
+        fallbackInput.focus();
+        fallbackInput.select();
+      }
     }
   }
 
@@ -77,11 +104,19 @@ export function Room({ room, disabled, send }: Props) {
           <strong>{room.code}</strong>
         </div>
         <Button variant="secondary" onClick={copyLink}>
-          <Link size={18} aria-hidden="true" /> {t('room.invite')}
+          {copied ? (
+            <Check size={18} aria-hidden="true" />
+          ) : (
+            <Link size={18} aria-hidden="true" />
+          )}{' '}
+          {copied ? t('room.copied') : t('room.invite')}
         </Button>
+        <span className="sr-only" role="status">
+          {copied ? t('room.copySuccess') : ''}
+        </span>
       </div>
       <p className="share-status" role="status">
-        {copied ? t('room.copied') : copyFallback ? t('room.copyFallback') : ''}
+        {copyFallback ? t('room.copyFallback') : ''}
       </p>
       {copyFallback && (
         <div className="copy-fallback">

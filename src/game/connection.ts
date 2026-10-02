@@ -19,6 +19,7 @@ interface ConnectionState {
 }
 
 const storageKey = 'undercover-session';
+const requestTimeoutMs = 6000;
 const disconnectedReply: RequestReply = {
   ok: false,
   messageId: 'CONNECTION_DROPPED',
@@ -60,8 +61,11 @@ export class GameConnection {
   private listeners = new Set<() => void>();
   private socket: WebSocket | null = null;
   private reconnect: ReturnType<typeof setTimeout> | null = null;
+  private restoreSnapshot: ReturnType<typeof setTimeout> | null = null;
   private attempts = 0;
   private requestSequence = 0;
+  private requestGeneration = 0;
+  private retainError = false;
   private requests = new Map<string, (reply: RequestReply) => void>();
 
   getSnapshot = () => this.state;
@@ -77,7 +81,10 @@ export class GameConnection {
     };
   };
 
-  clearError = () => this.update({ error: null });
+  clearError = () => {
+    this.retainError = false;
+    this.update({ error: null });
+  };
 
   send = async (action: GameAction): Promise<boolean> => {
     if (!this.state.connected || this.state.restoring) {
@@ -85,8 +92,11 @@ export class GameConnection {
       return false;
     }
     if (this.state.pending) return false;
+    this.retainError = false;
+    const requestGeneration = this.requestGeneration;
     this.update({ pending: true, error: null });
     const reply = await this.request(action);
+    if (requestGeneration !== this.requestGeneration) return false;
     this.update({ pending: false });
     if (!reply.ok) {
       this.update({ error: replyMessage(reply) });
@@ -115,6 +125,7 @@ export class GameConnection {
   }
 
   private enterRoom(session: Session, room?: RoomView) {
+    this.retainError = false;
     this.update({ error: null });
     this.storeSession(session);
     const url = new URL(window.location.href);
@@ -135,7 +146,13 @@ export class GameConnection {
       if (this.socket !== socket) return;
       const message = decodeServerMessage(event.data);
       if (message) this.receive(message);
-      else this.update({ error: { messageId: 'SERVER_MESSAGE_INVALID' } });
+      else {
+        this.update({ error: { messageId: 'SERVER_MESSAGE_INVALID' } });
+        if (this.state.restoring) {
+          socket.close();
+          this.disconnect(socket);
+        }
+      }
     };
     socket.onclose = () => this.disconnect(socket);
   }
@@ -144,14 +161,21 @@ export class GameConnection {
     this.attempts = 0;
     this.update({ connected: true, restoring: Boolean(this.session) });
     if (this.session) {
+      const requestGeneration = this.requestGeneration;
       const reply = await this.request({
         type: 'resume',
         code: this.session.code,
         token: this.session.token,
       });
-      if (this.socket !== socket) return;
+      if (
+        this.socket !== socket ||
+        requestGeneration !== this.requestGeneration
+      )
+        return;
       if (reply.ok) {
         if (!reply.session) this.update({ error: null });
+        if (!this.state.restoring) return;
+        this.waitForRestoredState(socket);
         return;
       }
       if (reply.code === 'SESSION') {
@@ -168,42 +192,69 @@ export class GameConnection {
       }
       return;
     }
-    this.update({ restoring: false, error: null });
+    this.update({
+      restoring: false,
+      error: this.retainError ? this.state.error : null,
+    });
+  }
+
+  private waitForRestoredState(socket: WebSocket) {
+    this.clearRestoreSnapshot();
+    this.restoreSnapshot = setTimeout(() => {
+      if (this.socket !== socket || !this.state.restoring) return;
+      this.update({ error: { messageId: 'SERVER_MESSAGE_INVALID' } });
+      socket.close();
+      this.disconnect(socket);
+    }, requestTimeoutMs);
+  }
+
+  private clearRestoreSnapshot() {
+    if (this.restoreSnapshot) clearTimeout(this.restoreSnapshot);
+    this.restoreSnapshot = null;
   }
 
   private receive(message: ServerMessage) {
     switch (message.type) {
       case 'state':
+        this.clearRestoreSnapshot();
         this.update({ room: message.room, restoring: false });
         break;
       case 'reply':
         this.requests.get(message.id)?.(message.reply);
         break;
-      case 'removed':
+      case 'removed': {
+        this.clearRestoreSnapshot();
+        const error =
+          message.reason || message.messageId
+            ? {
+                messageId: message.messageId,
+                messageParams: message.messageParams,
+                fallback: message.reason,
+              }
+            : null;
+        this.retainError = error !== null;
+        if (error) this.requestGeneration++;
         this.storeSession(null);
         window.history.replaceState({}, '', window.location.pathname);
         this.update({
           room: null,
           restoring: false,
-          error:
-            message.reason || message.messageId
-              ? {
-                  messageId: message.messageId,
-                  messageParams: message.messageParams,
-                  fallback: message.reason,
-                }
-              : null,
+          pending: false,
+          error,
         });
+        this.settleRequests(error ? disconnectedReply : { ok: true });
         break;
+      }
     }
   }
 
-  private settleRequests() {
-    for (const finish of this.requests.values()) finish(disconnectedReply);
+  private settleRequests(reply: RequestReply = disconnectedReply) {
+    for (const finish of this.requests.values()) finish(reply);
   }
 
   private disconnect(socket: WebSocket) {
     if (this.socket !== socket) return;
+    this.clearRestoreSnapshot();
     this.socket = null;
     this.update({ connected: false, ...(!this.session ? { room: null } : {}) });
     this.settleRequests();
@@ -221,6 +272,7 @@ export class GameConnection {
   private dispose() {
     if (this.reconnect) clearTimeout(this.reconnect);
     this.reconnect = null;
+    this.clearRestoreSnapshot();
     const socket = this.socket;
     this.socket = null;
     socket?.close();
@@ -264,11 +316,11 @@ export class GameConnection {
             finish(reply);
             socket.close();
             this.disconnect(socket);
-          }, 6000);
+          }, requestTimeoutMs);
         } else {
           finish(reply);
         }
-      }, 6000);
+      }, requestTimeoutMs);
       this.requests.set(id, finish);
       try {
         socket.send(JSON.stringify({ id, action }));

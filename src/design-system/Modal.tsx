@@ -22,6 +22,7 @@ export function Modal({
     const element = dialog.current!;
     const opener = document.activeElement;
     element.showModal();
+    heading.current?.focus();
     return () => {
       element.close();
       if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
@@ -41,6 +42,9 @@ export function Modal({
         if (!busy) close();
       }}
     >
+      <h2 ref={heading} id={titleId} tabIndex={-1}>
+        {title}
+      </h2>
       <IconButton
         className="modal-close"
         aria-label={closeLabel}
@@ -49,9 +53,6 @@ export function Modal({
       >
         <X size={20} />
       </IconButton>
-      <h2 ref={heading} id={titleId} tabIndex={-1}>
-        {title}
-      </h2>
       {children}
     </dialog>
   );

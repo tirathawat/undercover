@@ -73,12 +73,16 @@ func (s *Server) cleanup() {
 			return
 		case now := <-ticker.C:
 			s.mu.Lock()
-			for code, room := range s.rooms {
-				if !room.HasConnectedPlayers() && now.Sub(room.LastActive) > roomRetention {
-					delete(s.rooms, code)
-				}
-			}
+			s.removeExpiredRooms(now)
 			s.mu.Unlock()
+		}
+	}
+}
+
+func (s *Server) removeExpiredRooms(now time.Time) {
+	for code, room := range s.rooms {
+		if !room.HasConnectedPlayers() && now.Sub(room.LastActive) > roomRetention {
+			delete(s.rooms, code)
 		}
 	}
 }

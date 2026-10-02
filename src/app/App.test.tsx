@@ -20,6 +20,7 @@ const mockUseGame = vi.hoisted(() => vi.fn());
 vi.mock('../game/use-game', () => ({ useGame: mockUseGame }));
 
 afterEach(() => {
+  vi.useRealTimers();
   cleanup();
   mockUseGame.mockReset();
   window.history.replaceState({}, '', '/');
@@ -516,7 +517,8 @@ test('clipboard failure focuses and selects the fallback link and announces it',
   ).toBe(true);
 });
 
-test('clipboard success announces completion without renaming the action', async () => {
+test('clipboard success temporarily confirms completion on the invite button', async () => {
+  vi.useFakeTimers();
   const writeText = vi.fn().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', {
     configurable: true,
@@ -524,11 +526,22 @@ test('clipboard success announces completion without renaming the action', async
   });
   render(<Room room={room()} disabled={false} send={vi.fn()} />);
 
-  fireEvent.click(screen.getByRole('button', { name: 'ชวนเพื่อน' }));
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'ชวนเพื่อน' }));
+  });
 
-  expect(await screen.findByRole('button', { name: 'ชวนเพื่อน' })).toBeTruthy();
-  const message = await screen.findByText('คัดลอกลิงก์แล้ว ส่งให้เพื่อนได้เลย');
-  expect(message.getAttribute('role')).toBe('status');
+  const copiedButton = screen.getByRole('button', { name: 'คัดลอกแล้ว' });
+  expect(copiedButton.querySelector('.lucide-check')).toBeTruthy();
+  const copyStatus = screen.getByText('คัดลอกลิงก์แล้ว ส่งให้เพื่อนได้เลย');
+  expect(copyStatus.getAttribute('role')).toBe('status');
+  expect(copyStatus.classList.contains('sr-only')).toBe(true);
+  expect(copyStatus.parentElement?.classList.contains('share-bar')).toBe(true);
+  expect(document.querySelector('.share-status')?.textContent).toBe('');
+
+  act(() => vi.advanceTimersByTime(1_999));
+  expect(screen.getByRole('button', { name: 'คัดลอกแล้ว' })).toBeTruthy();
+  act(() => vi.advanceTimersByTime(1));
+  expect(screen.getByRole('button', { name: 'ชวนเพื่อน' })).toBeTruthy();
 });
 
 test('successful clipboard retry clears a stale fallback', async () => {
@@ -546,11 +559,93 @@ test('successful clipboard retry clears a stale fallback', async () => {
   await screen.findByRole('textbox', { name: 'ลิงก์เข้าห้อง' });
   fireEvent.click(screen.getByRole('button', { name: 'ชวนเพื่อน' }));
 
-  await screen.findByText('คัดลอกลิงก์แล้ว ส่งให้เพื่อนได้เลย');
+  await screen.findByRole('button', { name: 'คัดลอกแล้ว' });
   await waitFor(() =>
     expect(screen.queryByRole('textbox', { name: 'ลิงก์เข้าห้อง' })).toBeNull(),
   );
   expect(writeText).toHaveBeenCalledTimes(2);
+});
+
+test('repeated clipboard failure refocuses and selects the existing fallback', async () => {
+  let rejectRetry!: (reason: Error) => void;
+  const writeText = vi
+    .fn()
+    .mockRejectedValueOnce(new Error('denied'))
+    .mockImplementationOnce(
+      () =>
+        new Promise<void>((_, reject) => {
+          rejectRetry = reject;
+        }),
+    );
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: { writeText },
+  });
+  render(<Room room={room()} disabled={false} send={vi.fn()} />);
+
+  fireEvent.click(screen.getByRole('button', { name: 'ชวนเพื่อน' }));
+  const fallback = await screen.findByRole<HTMLInputElement>('textbox', {
+    name: 'ลิงก์เข้าห้อง',
+  });
+  const invite = screen.getByRole('button', { name: 'ชวนเพื่อน' });
+  invite.focus();
+  fireEvent.click(invite);
+
+  expect(document.activeElement).toBe(invite);
+  await act(async () => rejectRetry(new Error('denied again')));
+  expect(document.activeElement).toBe(fallback);
+  expect(fallback.selectionStart).toBe(0);
+  expect(fallback.selectionEnd).toBe(fallback.value.length);
+  expect(writeText).toHaveBeenCalledTimes(2);
+});
+
+test('a stale clipboard success cannot replace a newer failure', async () => {
+  let resolveFirstCopy!: () => void;
+  const writeText = vi
+    .fn()
+    .mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveFirstCopy = resolve;
+        }),
+    )
+    .mockRejectedValueOnce(new Error('denied'));
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: { writeText },
+  });
+  render(<Room room={room()} disabled={false} send={vi.fn()} />);
+
+  fireEvent.click(screen.getByRole('button', { name: 'ชวนเพื่อน' }));
+  fireEvent.click(screen.getByRole('button', { name: 'ชวนเพื่อน' }));
+  const fallback = await screen.findByRole('textbox', {
+    name: 'ลิงก์เข้าห้อง',
+  });
+
+  await act(async () => resolveFirstCopy());
+
+  expect(document.activeElement).toBe(fallback);
+  expect(screen.getByRole('button', { name: 'ชวนเพื่อน' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'คัดลอกแล้ว' })).toBeNull();
+});
+
+test('unmounting clears a pending clipboard confirmation reset', async () => {
+  vi.useFakeTimers();
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: { writeText },
+  });
+  const view = render(<Room room={room()} disabled={false} send={vi.fn()} />);
+
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'ชวนเพื่อน' }));
+  });
+  expect(vi.getTimerCount()).toBe(1);
+
+  view.unmount();
+
+  expect(vi.getTimerCount()).toBe(0);
 });
 
 test('Home distinguishes connection and pending action states', () => {
